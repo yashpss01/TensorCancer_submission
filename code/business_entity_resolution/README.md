@@ -1,46 +1,48 @@
-# Business entity resolution: research snapshot
+# Business entity resolution: frozen inference
 
-This first Archisman-branch commit preserves the completed blocking and matching experiments, frozen models, and measured holdout evidence. **It does not yet provide a test inference entry point or generated Portal TSVs.** The current matcher is in `round5/`; the earlier sections below document the initial blocker and remain useful for reproducing that historical stage. The latest measured outcome is in `reports/matching_round5_holdout_review.md` at the repository root. A self-contained test inference runbook will be added after implementation and validation.
+Run from the repository/submission root with CPython 3.13, SQLite with FTS5, and the pinned packages in `code/business_entity_resolution/requirements.txt`. The runnable pipeline is entirely in `code/business_entity_resolution/src/`; its trained assets are in `code/business_entity_resolution/models/`. It reads only the provided test S1/S2/S3 TSVs during inference. It does **not** read training labels, previous evaluation SQLite files, or prior feature arrays.
 
-## Historical stage 1: candidate generation and local evaluation
+## Produce both required outputs
 
-Run from the repository root with Python 3.13 and SQLite 3.45.3 (FTS5 enabled). This implementation uses only the Python standard library. No network, external entity data, pretrained model, or matching classifier is used. `phonetic.py` derives a coarse Indic transliteration from standard Unicode character names; it does not contain a business vocabulary.
-
-```sh
-python3 code/business_entity_resolution/src/blocking.py prepare
-python3 code/business_entity_resolution/src/blocking.py build
-python3 code/business_entity_resolution/src/evaluate.py run dev
-python3 code/business_entity_resolution/src/evaluate.py summarize dev
-python3 -m unittest discover -s tests -v
-```
-
-The first two commands refuse to overwrite the split or index. Existing artifacts can be inspected directly. To reproduce in a fresh workspace, copy code and the original dataset directory, then run these commands. Do not delete or modify the original datasets.
-
-`prepare` takes the first 10,000 training S1 file rows, orders them by SHA256 of a fixed seed plus ID, and assigns 7,000 to development and 3,000 to holdout. It audits all ground-truth rows for shared target ownership involving the sample. IDs are used only for bookkeeping and reproducible selection, never as retrieval features. Labels construct the evaluation pool and score results; the retriever receives text only.
-
-`build` scans all S2/S3 records once. It retains every labeled target for the 10,000 references, plus a deterministic 2% sample of other targets. The index retains original strings, alongside derived normalized fields. Country is never a hard filter, so unseen labels remain eligible. This is an intentionally reduced and enriched target pool: its results cannot establish full-corpus performance, unbiased population accuracy, or generalization to France.
-
-`run dev` evaluates complementary indexed name, address, joint name/address, name-trigram, phonetic-name, and phonetic-name/address routes. Each route returns at most 40 records, and their deduplicated union is ranked using unsupervised weighted token cosine/containment and character/phonetic Dice overlap. Candidate budget sweeps expose the recall/cost tradeoff. This scoring is a blocking filter, not a trained matching model. The exported `candidate_pairs.tsv` is the final stage-one set intended for a future matching model; raw retrieval lists are separate diagnostics.
-
-Run `python3 code/business_entity_resolution/src/tune.py` to sweep caps/cutoffs and propose the smallest development configuration meeting the 99.75% guardrail. Then run `python3 code/business_entity_resolution/src/rescue_sweep.py` to evaluate selective rescues, enrich cached rankings, and choose the final 99.70% development guardrail configuration. This guardrail was amended before holdout to reduce candidate size; see the protocol. Inspect development misses before freezing. After selecting the development configuration, run `python3 code/business_entity_resolution/src/freeze.py` to save its hashes, then run:
+Start with an empty index directory and an empty output directory. The index command includes **every** test S2 and S3 record, without filtering to known countries. It may require substantial local disk space and CPU time for the full corpus.
 
 ```sh
-python3 code/business_entity_resolution/src/evaluate.py run holdout
+python3 -m pip install -r code/business_entity_resolution/requirements.txt
+
+python3 code/business_entity_resolution/src/infer.py index \
+  --test-dir dataset/test \
+  --index-dir inference_index/test
+
+python3 code/business_entity_resolution/src/infer.py run \
+  --source1 dataset/test/test_source1.tsv \
+  --index-dir inference_index/test \
+  --output-dir output \
+  --workers 6 \
+  --batch-size 256
+
+python3 utils/validate_submission.py \
+  --matching output/matching_results.tsv \
+  --candidate output/candidate_pairs.tsv \
+  --test-dir dataset/test \
+  --check-ids
 ```
 
-The holdout command records a one-time opening marker and refuses subsequent runs against the same benchmark. No tuning may use holdout misses. A future iteration needs another independent benchmark. Only development results support budget sweeps.
+`run` writes `output/matching_results.tsv` and `output/candidate_pairs.tsv`, each with one row per input S1 in original order. Empty candidate and match lists are written as empty TSV cells. Final matches are a subset of the candidate list for each S1. It also writes `output/inference_meta.json` with counts, hashes, and runtime. The files are first written with `.partial` suffixes and renamed only after successful completion. Existing index/output files are never overwritten; use a new empty directory for a rerun after an interruption.
 
-Artifacts live under `artifacts/blocking/`. `queries.json` and separate truth files preserve the evaluation sample. `index.sqlite` stores the searchable target pool; `index_meta.json` records its size and construction resources. Split directories hold rankings, runtime, final candidate TSV, metrics, and missed-pair text. No `matching_results.tsv` is produced: final classification is out of scope.
+`--limit N` is only for smoke testing and requires a separate output directory. Such output is incomplete and must never be submitted. The full test inference and Portal upload have **not** been run as part of this handoff; the validator must pass on the actual full `output/` files before submission.
 
-The disk-backed index bounds memory, but rare-token postings may grow substantially in the full corpus. Full-corpus index and query runtime, candidate competition, recall, and candidate budgets remain unvalidated. The earlier full-corpus attempt was stopped following the user's smaller-experiment request; its incomplete artifacts are kept separately in `artifacts/full_corpus_aborted` and never used in results.
+## Frozen method
 
-Retrieval runs with three local worker processes. Runtime reports distinguish parent peak RSS from maximum child peak RSS; they do not measure aggregate concurrent system memory. The saved `iteration_log.json` distinguishes the invalid compact-index diagnostic, valid baseline, small pilots, and final full development sweep. `reindex.py` can rebuild derived fields from an existing pool without another corpus scan; `build_rescue.py` is an archived experimental separate-index builder and is not needed for the final pipeline.
+Stage 1 uses SQLite FTS5 name, address, character-gram, and phonetic routes; a second text-only rescue pass adds bounded candidates. The final candidate rule preserves baseline candidates and adds up to 16 rescue candidates scoring at least 0.5. `candidate_pairs.tsv` contains exactly these candidates, before the matcher scores them.
 
-After the holdout run, verify exact TSVs and generate the report:
+Stage 2 computes the frozen 39 base pair features, 20 additional typo/character features, and 26 group-context features. A first XGBoost model supplies pair probabilities for group context. The final probability is `0.4 × group_model + 0.6 × augmented_pair_model`; links at or above 0.74 are selected. Token and character IDF dictionaries are bundled from training so inference uses the same feature definitions. The bundled `models/manifest.json` checks asset hashes and feature order. No S1/S2/S3 ID value enters a matching feature. Country equality is a feature, never a hard country filter, so France rows are processed.
 
-```sh
-python3 code/business_entity_resolution/src/verify.py
-python3 code/business_entity_resolution/src/report.py
-```
+The selected model was frozen before a 20,000-S1 training holdout. On a **reduced, positive-enriched 409,141-target pool**, the holdout scored 98.4117% competition macro F0.5 overall (India 98.3497%, US 98.4536%); blocking recall was 99.7707%. This is below the 99.5% aspiration. The result is **not** a full-corpus or Portal score, and it does not establish France accuracy. The full target corpus may change candidate competition and runtime substantially.
 
-Verification also writes `artifacts/blocking/candidate_pairs.tsv` containing all first 10,000 references in original file order. Separate split files and metrics distinguish tuned development from untouched holdout. This combined file is not a competition test submission.
+The repository's `round2/` through `round5/` directories and `reports/` hold the research, training, and evaluation provenance. They are not dependencies of `src/infer.py`. To reproduce inference in a submission zip, include `src/`, `models/`, this README, `requirements.txt`, the provided test data at the documented paths, and the challenge's validator. Fill `Documentation_template.md` and include it with both generated output TSVs in the final package.
+
+## Local packaging verification already completed
+
+- Exact candidate-list and final-match parity against frozen saved predictions for 10 untouched training-holdout rows.
+- Tiny fresh index from 10 sample S2/S3 targets, then inference for two sample S1 rows, including one labeled `France`; both output TSVs passed `utils/validate_submission.py --check-ids` on that tiny fixture.
+- No full test inference, Portal upload, or cloud job was performed for this packaging check.

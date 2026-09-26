@@ -1,5 +1,6 @@
 dataset/
 work/
+inference_index/
 .venv/
 __pycache__/
 *.pyc
@@ -10,4 +11,6 @@ __pycache__/
 *.jsonl
 *.log
 output/*.tsv
+output/*.partial
+output/inference_meta.json
 artifacts/**/*.tsv

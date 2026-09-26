@@ -40,13 +40,14 @@ On holdout the matcher predicted 67,723 true links and 637 false links, and miss
 
 ## 6. Conclusion
 
-The 99.5% macro-F0.5 target remains unmet. The frozen model and holdout evidence are preserved for review. A hard-case reranker is the proposed next experiment, but it has not been trained or evaluated in this branch. Full test inference, France behavior, and the Portal score must be assessed separately before submission claims are made.
+The 99.5% macro-F0.5 target remains unmet. The frozen model and holdout evidence are preserved for review. A hard-case reranker is the proposed next experiment, but it has not been trained or evaluated in this branch. A self-contained test inference entry point is included; full test inference, France accuracy, and the Portal score have not been measured.
 
 ## Appendix
 
 ### A. Code Artefacts
 
-- `code/business_entity_resolution/src/`: initial blocker and reporting code.
+- `code/business_entity_resolution/src/`: initial blocker, reporting code, and self-contained `infer.py` with its inference feature/retrieval modules.
+- `code/business_entity_resolution/models/`: three frozen XGBoost models, IDF weights, baseline selection config, and SHA-256 manifest.
 - `code/business_entity_resolution/round2/` through `round4/`: blocker improvements and independent validation rounds.
 - `code/business_entity_resolution/round5/`: pair features, matcher training, group features, and frozen holdout evaluation.
 - `artifacts/matching_round5/`: frozen model weights and compact evidence files. Raw challenge data, multi-gigabyte intermediate arrays, and the reduced SQLite index are not in Git.
@@ -54,4 +55,4 @@ The 99.5% macro-F0.5 target remains unmet. The frozen model and holdout evidence
 
 ### B. Delivery Boundary
 
-`output/matching_results.tsv` and `output/candidate_pairs.tsv` are required for Portal delivery. They are not present yet. The team lead must run test inference, validate the TSV format and coverage, then package the code, models, documentation, and generated outputs. The saved holdout score must not be represented as the Portal score.
+`output/matching_results.tsv` and `output/candidate_pairs.tsv` are required for Portal delivery. They are not present yet. The team lead can run the commands in `code/business_entity_resolution/README.md`, validate TSV format and coverage, then package the code, models, documentation, and generated outputs. A tiny inference fixture passed the challenge validator, including ID checks; this is a software check, not a performance score. The saved holdout score must not be represented as the Portal score.

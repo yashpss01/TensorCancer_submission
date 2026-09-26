@@ -126,9 +126,12 @@ fresh 10k reduced-pool batch:
 This is a **6.37× faster matcher-only iteration**, not a 6.37× faster first
 end-to-end run. Existing training arrays already similarly avoid retrieval
 when only hyperparameters change. Peak RSS before/after on the *full 10k*
-comparison was not measured, so no memory-improvement claim is made. The
-500-row single-process profile peaked at 800.9 MB; the cached scorer uses
-fewer retrieval indexes but its peak has not been instrumented.
+comparison was not measured, so no full-run memory-improvement claim is made.
+On the same first 500 S1 rows, a subsequent production `score-cached --limit
+500` pass took 12.37 seconds and its process peaked at 585.3 MB sampled RSS.
+The earlier read-only original 500-row loop took 239.12 seconds and recorded
+800.9 MB peak process RSS. These different runners and measurement methods
+make the memory figures indicative, not a controlled before/after percentage.
 
 A read-only A–B–B–A SQLite setting test preserved candidate hash across all
 four 100-row reduced-pool passes. Default retrieval took 46.30 and 43.36 s;
@@ -161,10 +164,12 @@ are in `work/fresh_10k_v1/fts_reuse_1000.json`.
   if the target universe stayed fixed. The first five test rows show much
   higher per-S1 latency and make the current FTS implementation unsuitable
   for an immediate full-test run on the local Mac.
-- Investigate batched sparse candidate retrieval as a separate architecture,
-  while measuring both blocking recall and final matcher F0.5 on disjoint
-  labeled cohorts. A faster candidate generator is not an accepted replacement
-  until it passes that quality gate.
+- A separate [batched sparse retrieval screen](batched_retrieval_architecture_screen.md)
+  tested two candidate allowances against the full training S1 index and the
+  same reduced target pool. Both missed too many known links; even the wider
+  setting had only 98.0302% blocking recall and a 99.3857% perfect-decision
+  macro F0.5 ceiling. It is not an accepted replacement. Any redesigned
+  candidate generator needs a fresh disjoint quality gate before use.
 - Keep the saved index, candidates, and deterministic feature arrays reusable.
   Profiling a full rebuild on every model tweak would spend time without
   changing the model comparison.

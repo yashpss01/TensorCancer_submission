@@ -29,6 +29,27 @@ python3 utils/validate_submission.py \
 
 `run` writes `output/matching_results.tsv` and `output/candidate_pairs.tsv`, each with one row per input S1 in original order. Empty candidate and match lists are written as empty TSV cells. Final matches are a subset of the candidate list for each S1. It also writes `output/inference_meta.json` with counts, hashes, and runtime. The files are first written with `.partial` suffixes and renamed only after successful completion. Existing index/output files are never overwritten; use a new empty directory for a rerun after an interruption.
 
+For **matcher-only iteration** on a dataset whose candidates have already been
+generated, use the cached candidate TSV with the same Source-1 order and target
+index. This avoids the expensive FTS retrieval pass but does not speed up the
+first run. It verifies the candidate digest in the prior run's metadata, checks
+every Source-1 ID and candidate uniqueness, and records the source candidate
+and model digests in the new metadata. Use a new output directory:
+
+```sh
+python3 code/business_entity_resolution/src/infer.py score-cached \
+  --source1 dataset/test/test_source1.tsv \
+  --candidate-tsv output/candidate_pairs.tsv \
+  --index-dir inference_index/test \
+  --output-dir rescored_output
+```
+
+On a 10,000-S1 reduced-pool validation batch, cached scoring took 228 seconds
+versus 1,452 seconds for the original retrieval-and-scoring run (6.37× faster),
+and both resulting TSVs were byte-for-byte identical. That timing does not
+predict full-corpus performance. Model selection must still use development
+labels and a fresh holdout; the unlabeled test output is not a tuning set.
+
 `--limit N` is only for smoke testing and requires a separate output directory. Such output is incomplete and must never be submitted. The full test inference and Portal upload have **not** been run as part of this handoff; the validator must pass on the actual full `output/` files before submission.
 
 For parallel machines or separate long-running jobs, use contiguous, zero-based row ranges. The current provided test S1 file has **1,732,544 data rows** (excluding its header); verify that count before choosing ranges. Every shard needs the same read-only index and model bundle. For example, two halves can run independently:

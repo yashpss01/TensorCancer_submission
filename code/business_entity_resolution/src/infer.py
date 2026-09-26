@@ -189,7 +189,89 @@ def run(source1,index_dir,output_dir,model_dir,workers,batch_size,limit,start_ro
     db.close()
     if stop_row is not None and seen!=stop_row-start_row:raise RuntimeError('Source 1 ended before requested shard range')
     temp_matching.rename(matching);temp_candidate.rename(candidate)
-    meta=dict(source1_rows=seen,start_row=start_row,end_row_exclusive=start_row+seen,candidate_pairs=candidate_count,predicted_pairs=match_count,partial_run=partial,seconds=time.monotonic()-start,matching_sha256=digest(matching),candidate_sha256=digest(candidate),model_manifest_sha256=digest(model_dir/'manifest.json'))
+    meta=dict(source1_rows=seen,start_row=start_row,end_row_exclusive=start_row+seen,candidate_pairs=candidate_count,predicted_pairs=match_count,partial_run=partial,seconds=time.monotonic()-start,matching_sha256=digest(matching),candidate_sha256=digest(candidate),index_meta_sha256=digest(index_dir/'index_meta.json'),model_manifest_sha256=digest(model_dir/'manifest.json'))
+    (output_dir/'inference_meta.json').write_text(json.dumps(meta,indent=2)+'\n')
+    print(json.dumps(meta,indent=2),flush=True)
+
+
+def score_cached(source1,candidate_tsv,index_dir,output_dir,model_dir,batch_size,limit=None):
+    """Reuse a deterministic candidate TSV when experimenting with matcher models.
+
+    The original `run` command remains the full retrieval-and-scoring path.
+    Candidate rows must align exactly with Source 1; every candidate is looked
+    up in the supplied target index before it can be scored.
+    """
+    if not source1.is_file() or not candidate_tsv.is_file():
+        raise FileNotFoundError('Source 1 and cached candidate TSV must exist')
+    if not (index_dir/'index_meta.json').is_file():
+        raise FileNotFoundError('Build the target index first')
+    if batch_size<1 or limit is not None and limit<1:
+        raise ValueError('batch size and limit must be positive')
+    if limit is not None and output_dir.resolve()==(ROOT/'output').resolve():
+        raise ValueError('A limited run must use a separate output directory')
+    candidate_sha=digest(candidate_tsv)
+    cache_meta_path=candidate_tsv.parent/'inference_meta.json'
+    cache_meta=json.loads(cache_meta_path.read_text()) if cache_meta_path.is_file() else None
+    if cache_meta:
+        if cache_meta.get('candidate_sha256')!=candidate_sha:
+            raise ValueError('Cached candidate TSV differs from its recorded digest')
+        if 'index_meta_sha256' in cache_meta and cache_meta['index_meta_sha256']!=digest(index_dir/'index_meta.json'):
+            raise ValueError('Cached candidates came from a different target index')
+    started=time.monotonic()
+    models=load_models(model_dir)
+    model_load_seconds=time.monotonic()-started
+    output_dir.mkdir(parents=True,exist_ok=True)
+    matching=output_dir/'matching_results.tsv';candidate=output_dir/'candidate_pairs.tsv'
+    temp_matching=output_dir/'matching_results.tsv.partial';temp_candidate=output_dir/'candidate_pairs.tsv.partial'
+    if any(p.exists() for p in (matching,candidate,temp_matching,temp_candidate)):
+        raise RuntimeError('Output already exists; choose a new empty output directory')
+    db=sqlite3.connect(f'file:{index_dir/"index.sqlite"}?mode=ro',uri=True)
+    source_iter=rows(source1)
+    if limit is not None:source_iter=itertools.islice(source_iter,limit)
+    seen=pair_count=match_count=0
+    score_seconds=0.
+    with open(candidate_tsv,encoding='utf-8',newline='') as cached,open(temp_matching,'x',encoding='utf-8') as mf,open(temp_candidate,'x',encoding='utf-8') as cf:
+        if cached.readline()!='source1_entity_id\tcandidate_entity_ids\n':
+            raise ValueError('Unexpected candidate TSV header')
+        mf.write('source1_entity_id\tmatched_entity_ids\n')
+        cf.write('source1_entity_id\tcandidate_entity_ids\n')
+        while True:
+            queries=list(itertools.islice(source_iter,batch_size))
+            if not queries:break
+            lists=[];lines=[]
+            for q in queries:
+                line=cached.readline()
+                if not line or not line.endswith('\n'):
+                    raise ValueError('Cached candidates ended early or lack final newline')
+                fields=line[:-1].split('\t')
+                if len(fields)!=2 or fields[0]!=q['entity_id']:
+                    raise ValueError('Candidate row does not match Source 1 order')
+                mids=fields[1].split(',') if fields[1] else []
+                if len(mids)!=len(set(mids)):
+                    raise ValueError('Duplicate cached candidate ID')
+                lists.append(mids);lines.append(line)
+            score_start=time.monotonic()
+            matches=match_batch(queries,lists,db,models)
+            score_seconds+=time.monotonic()-score_start
+            for q,mids,chosen,line in zip(queries,lists,matches,lines):
+                assert set(chosen)<=set(mids)
+                cf.write(line)
+                mf.write(q['entity_id']+'\t'+','.join(chosen)+'\n')
+                seen+=1;pair_count+=len(mids);match_count+=len(chosen)
+            if seen%1000<batch_size:
+                print('scored cached',seen,'S1 rows in',round(time.monotonic()-started,1),'seconds',flush=True)
+        if limit is None and cached.readline():
+            raise ValueError('Cached candidate TSV has extra rows')
+        if limit is None and cache_meta and cache_meta.get('source1_rows')!=seen:
+            raise ValueError('Cached candidate row count differs from its manifest')
+    db.close()
+    temp_matching.rename(matching);temp_candidate.rename(candidate)
+    meta=dict(source1_rows=seen,candidate_pairs=pair_count,predicted_pairs=match_count,
+              partial_run=limit is not None,cache_used=True,seconds=time.monotonic()-started,
+              model_load_seconds=model_load_seconds,score_seconds=score_seconds,
+              source_candidate_sha256=candidate_sha,candidate_sha256=digest(candidate),
+              matching_sha256=digest(matching),index_meta_sha256=digest(index_dir/'index_meta.json'),
+              model_manifest_sha256=digest(model_dir/'manifest.json'))
     (output_dir/'inference_meta.json').write_text(json.dumps(meta,indent=2)+'\n')
     print(json.dumps(meta,indent=2),flush=True)
 
@@ -255,6 +337,14 @@ def main():
     r.add_argument('--limit',type=int,help='Smoke test only; creates incomplete output')
     r.add_argument('--start-row',type=int,default=0,help='Zero-based start for a sharded run')
     r.add_argument('--stop-row',type=int,help='Exclusive end for a sharded run')
+    c=sub.add_parser('score-cached',help='Score a verified candidate TSV without rerunning retrieval')
+    c.add_argument('--source1',type=pathlib.Path,required=True)
+    c.add_argument('--candidate-tsv',type=pathlib.Path,required=True)
+    c.add_argument('--index-dir',type=pathlib.Path,required=True)
+    c.add_argument('--output-dir',type=pathlib.Path,required=True)
+    c.add_argument('--model-dir',type=pathlib.Path,default=DEFAULT_MODELS)
+    c.add_argument('--batch-size',type=int,default=256)
+    c.add_argument('--limit',type=int,help='Profiling only: incomplete output')
     m=sub.add_parser('merge',help='Merge complete, contiguous S1 shards in source order')
     m.add_argument('--source1',type=pathlib.Path,default=ROOT/'dataset/test/test_source1.tsv')
     m.add_argument('--shards',type=pathlib.Path,nargs='+',required=True)
@@ -264,6 +354,8 @@ def main():
     elif a.command=='run':
         if a.workers<1 or a.batch_size<1 or a.limit is not None and a.limit<1:raise ValueError('workers, batch size, and limit must be positive')
         run(a.source1,a.index_dir,a.output_dir,a.model_dir,a.workers,a.batch_size,a.limit,a.start_row,a.stop_row)
+    elif a.command=='score-cached':
+        score_cached(a.source1,a.candidate_tsv,a.index_dir,a.output_dir,a.model_dir,a.batch_size,a.limit)
     else:merge(a.source1,a.shards,a.output_dir)
 
 

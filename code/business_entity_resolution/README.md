@@ -31,6 +31,24 @@ python3 utils/validate_submission.py \
 
 `--limit N` is only for smoke testing and requires a separate output directory. Such output is incomplete and must never be submitted. The full test inference and Portal upload have **not** been run as part of this handoff; the validator must pass on the actual full `output/` files before submission.
 
+For parallel machines or separate long-running jobs, use contiguous, zero-based row ranges. The current provided test S1 file has **1,732,544 data rows** (excluding its header); verify that count before choosing ranges. Every shard needs the same read-only index and model bundle. For example, two halves can run independently:
+
+```sh
+python3 code/business_entity_resolution/src/infer.py run \
+  --source1 dataset/test/test_source1.tsv --index-dir inference_index/test \
+  --output-dir shard_0 --start-row 0 --stop-row 866272
+
+python3 code/business_entity_resolution/src/infer.py run \
+  --source1 dataset/test/test_source1.tsv --index-dir inference_index/test \
+  --output-dir shard_1 --start-row 866272 --stop-row 1732544
+
+python3 code/business_entity_resolution/src/infer.py merge \
+  --source1 dataset/test/test_source1.tsv \
+  --shards shard_0 shard_1 --output-dir output
+```
+
+`merge` sorts shards by row range, verifies their hashes and contiguous coverage against every S1 ID, checks that matches are subsets of candidates, and writes the two final files. Run the validator after merging. Sharding the S1 work changes throughput only if the target index and enough CPU/SSD capacity are available to the workers. The local 20,000-S1 reduced-pool evaluation took about 35 minutes; a simple linear extrapolation to 1.73 million S1 exceeds two days, and the full target pool may be slower. This is a planning estimate, not a measured full-test runtime.
+
 ## Frozen method
 
 Stage 1 uses SQLite FTS5 name, address, character-gram, and phonetic routes; a second text-only rescue pass adds bounded candidates. The final candidate rule preserves baseline candidates and adds up to 16 rescue candidates scoring at least 0.5. `candidate_pairs.tsv` contains exactly these candidates, before the matcher scores them.
@@ -45,4 +63,5 @@ The repository's `round2/` through `round5/` directories and `reports/` hold the
 
 - Exact candidate-list and final-match parity against frozen saved predictions for 10 untouched training-holdout rows.
 - Tiny fresh index from 10 sample S2/S3 targets, then inference for two sample S1 rows, including one labeled `France`; both output TSVs passed `utils/validate_submission.py --check-ids` on that tiny fixture.
+- An isolated folder containing only `src/` and `models/` built and scored that fixture. Two independent S1 shards merged to byte-for-byte identical TSVs as the unsharded run, and the merged TSVs passed `--check-ids`.
 - No full test inference, Portal upload, or cloud job was performed for this packaging check.

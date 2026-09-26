@@ -150,11 +150,15 @@ def match_batch(queries,candidate_lists,db,models):
     return [[mid for mid,p in zip(mids,prob[offsets[i]:offsets[i+1]]) if p>=.74] for i,mids in enumerate(candidate_lists)]
 
 
-def run(source1,index_dir,output_dir,model_dir,workers,batch_size,limit):
+def run(source1,index_dir,output_dir,model_dir,workers,batch_size,limit,start_row=0,stop_row=None):
     if not source1.is_file():raise FileNotFoundError(source1)
     if not (index_dir/'index_meta.json').is_file():raise FileNotFoundError('Build the target index first')
-    if limit is not None and output_dir.resolve()==(ROOT/'output').resolve():
-        raise ValueError('A limited smoke run must use a separate output directory')
+    if start_row<0 or stop_row is not None and stop_row<=start_row:raise ValueError('Invalid row range')
+    if limit is not None and stop_row is not None:raise ValueError('Use either --limit or --stop-row')
+    if limit is not None:stop_row=start_row+limit
+    partial=start_row!=0 or stop_row is not None
+    if partial and output_dir.resolve()==(ROOT/'output').resolve():
+        raise ValueError('A limited or sharded run must use a separate output directory')
     models=load_models(model_dir)
     output_dir.mkdir(parents=True,exist_ok=True)
     matching=output_dir/'matching_results.tsv';candidate=output_dir/'candidate_pairs.tsv'
@@ -163,8 +167,7 @@ def run(source1,index_dir,output_dir,model_dir,workers,batch_size,limit):
         raise RuntimeError('Output already exists; choose a new empty output directory')
     db=sqlite3.connect(f'file:{index_dir/"index.sqlite"}?mode=ro',uri=True)
     seen=0;candidate_count=0;match_count=0;start=time.monotonic()
-    source_rows=rows(source1)
-    if limit is not None:source_rows=itertools.islice(source_rows,limit)
+    source_rows=itertools.islice(rows(source1),start_row,stop_row)
     with open(temp_matching,'x',encoding='utf-8') as mf,open(temp_candidate,'x',encoding='utf-8') as cf,ProcessPoolExecutor(max_workers=workers,initializer=init_worker,initargs=(str(index_dir),)) as pool:
         mf.write('source1_entity_id\tmatched_entity_ids\n')
         cf.write('source1_entity_id\tcandidate_entity_ids\n')
@@ -184,10 +187,56 @@ def run(source1,index_dir,output_dir,model_dir,workers,batch_size,limit):
             cf.flush();mf.flush()
             if seen%1000<batch_size:print('inferred',seen,'S1 rows in',round(time.monotonic()-start,1),'seconds',flush=True)
     db.close()
+    if stop_row is not None and seen!=stop_row-start_row:raise RuntimeError('Source 1 ended before requested shard range')
     temp_matching.rename(matching);temp_candidate.rename(candidate)
-    meta=dict(source1_rows=seen,candidate_pairs=candidate_count,predicted_pairs=match_count,partial_run=limit is not None,seconds=time.monotonic()-start,matching_sha256=digest(matching),candidate_sha256=digest(candidate),model_manifest_sha256=digest(model_dir/'manifest.json'))
+    meta=dict(source1_rows=seen,start_row=start_row,end_row_exclusive=start_row+seen,candidate_pairs=candidate_count,predicted_pairs=match_count,partial_run=partial,seconds=time.monotonic()-start,matching_sha256=digest(matching),candidate_sha256=digest(candidate),model_manifest_sha256=digest(model_dir/'manifest.json'))
     (output_dir/'inference_meta.json').write_text(json.dumps(meta,indent=2)+'\n')
     print(json.dumps(meta,indent=2),flush=True)
+
+
+def merge(source1,shards,output_dir):
+    """Join contiguous S1 shards and verify every row against source order."""
+    if not source1.is_file():raise FileNotFoundError(source1)
+    parts=[]
+    for directory in shards:
+        meta=json.loads((directory/'inference_meta.json').read_text())
+        for name,key in [('matching_results.tsv','matching_sha256'),('candidate_pairs.tsv','candidate_sha256')]:
+            assert digest(directory/name)==meta[key],directory/name
+        parts.append((meta['start_row'],meta['end_row_exclusive'],directory,meta))
+    parts.sort()
+    assert parts and parts[0][0]==0,'Shards must start at Source 1 row 0'
+    for left,right in zip(parts,parts[1:]):assert left[1]==right[0],'Gap or overlap between shards'
+    output_dir.mkdir(parents=True,exist_ok=True)
+    matching=output_dir/'matching_results.tsv';candidate=output_dir/'candidate_pairs.tsv'
+    temp_matching=output_dir/'matching_results.tsv.partial';temp_candidate=output_dir/'candidate_pairs.tsv.partial'
+    if any(p.exists() for p in (matching,candidate,temp_matching,temp_candidate)):
+        raise RuntimeError('Output already exists; choose a new empty merge directory')
+    source_iter=rows(source1);count=0
+    with open(temp_matching,'x',encoding='utf-8') as mf,open(temp_candidate,'x',encoding='utf-8') as cf:
+        mf.write('source1_entity_id\tmatched_entity_ids\n')
+        cf.write('source1_entity_id\tcandidate_entity_ids\n')
+        for first,last,directory,meta in parts:
+            assert meta['source1_rows']==last-first
+            with open(directory/'matching_results.tsv',encoding='utf-8') as sm,open(directory/'candidate_pairs.tsv',encoding='utf-8') as sc:
+                assert next(sm)=='source1_entity_id\tmatched_entity_ids\n'
+                assert next(sc)=='source1_entity_id\tcandidate_entity_ids\n'
+                for _ in range(meta['source1_rows']):
+                    expected=next(source_iter)['entity_id']
+                    ml=next(sm);cl=next(sc)
+                    mc=ml.rstrip('\n').split('\t');cc=cl.rstrip('\n').split('\t')
+                    assert len(mc)==len(cc)==2 and mc[0]==cc[0]==expected
+                    matches=mc[1].split(',') if mc[1] else []
+                    candidates=cc[1].split(',') if cc[1] else []
+                    assert len(matches)==len(set(matches)) and len(candidates)==len(set(candidates))
+                    assert set(matches)<=set(candidates)
+                    mf.write(ml);cf.write(cl);count+=1
+                assert next(sm,None) is None and next(sc,None) is None
+    assert next(source_iter,None) is None,'Shards do not cover every Source 1 record'
+    assert count==parts[-1][1]
+    temp_matching.rename(matching);temp_candidate.rename(candidate)
+    result=dict(source1_rows=count,partial_run=False,merged_shards=[str(x[2]) for x in parts],matching_sha256=digest(matching),candidate_sha256=digest(candidate))
+    (output_dir/'inference_meta.json').write_text(json.dumps(result,indent=2)+'\n')
+    print(json.dumps(result,indent=2),flush=True)
 
 
 def main():
@@ -204,11 +253,18 @@ def main():
     r.add_argument('--workers',type=int,default=6)
     r.add_argument('--batch-size',type=int,default=256)
     r.add_argument('--limit',type=int,help='Smoke test only; creates incomplete output')
+    r.add_argument('--start-row',type=int,default=0,help='Zero-based start for a sharded run')
+    r.add_argument('--stop-row',type=int,help='Exclusive end for a sharded run')
+    m=sub.add_parser('merge',help='Merge complete, contiguous S1 shards in source order')
+    m.add_argument('--source1',type=pathlib.Path,default=ROOT/'dataset/test/test_source1.tsv')
+    m.add_argument('--shards',type=pathlib.Path,nargs='+',required=True)
+    m.add_argument('--output-dir',type=pathlib.Path,default=ROOT/'output')
     a=p.parse_args()
     if a.command=='index':index(a.test_dir,a.index_dir)
-    else:
+    elif a.command=='run':
         if a.workers<1 or a.batch_size<1 or a.limit is not None and a.limit<1:raise ValueError('workers, batch size, and limit must be positive')
-        run(a.source1,a.index_dir,a.output_dir,a.model_dir,a.workers,a.batch_size,a.limit)
+        run(a.source1,a.index_dir,a.output_dir,a.model_dir,a.workers,a.batch_size,a.limit,a.start_row,a.stop_row)
+    else:merge(a.source1,a.shards,a.output_dir)
 
 
 if __name__=='__main__':main()

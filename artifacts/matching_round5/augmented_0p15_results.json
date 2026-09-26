@@ -1,0 +1,44 @@
+{
+  "best": {
+    "threshold": 0.8200000000000001,
+    "overall": {
+      "queries": 10000,
+      "macro_f05": 0.9823617474432618,
+      "pair_tp": 33483,
+      "pair_fp": 364,
+      "pair_fn": 933,
+      "singleton_count": 584,
+      "singleton_correct": 567,
+      "perfect_entities": 8845
+    },
+    "countries": {
+      "India": {
+        "queries": 4018,
+        "macro_f05": 0.9783907677094885,
+        "pair_tp": 13564,
+        "pair_fp": 176,
+        "pair_fn": 452,
+        "singleton_count": 226,
+        "singleton_correct": 219,
+        "perfect_entities": 3473
+      },
+      "US": {
+        "queries": 5982,
+        "macro_f05": 0.9850289819083742,
+        "pair_tp": 19919,
+        "pair_fp": 188,
+        "pair_fn": 481,
+        "singleton_count": 358,
+        "singleton_correct": 348,
+        "perfect_entities": 5372
+      }
+    }
+  },
+  "best_iteration": 935,
+  "seconds": 71.34851645771414,
+  "features": 59,
+  "supplement_weight": 0.15,
+  "supplement_pairs": 691760,
+  "peak_rss_bytes": 1910325248,
+  "model": "artifacts/matching_round5/augmented_0p15.json"
+}

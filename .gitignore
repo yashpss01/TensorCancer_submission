@@ -1,0 +1,13 @@
+dataset/
+work/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.zip
+*.sqlite
+*.npy
+*.jsonl
+*.log
+output/*.tsv
+artifacts/**/*.tsv

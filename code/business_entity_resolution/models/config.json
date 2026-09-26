@@ -1,0 +1,104 @@
+{
+ "decision": "expected",
+ "threshold": 0.5,
+ "results": {
+  "thr_0.3": {
+   "macro_f05": 0.9757745160032183,
+   "n_entities": 331029,
+   "pair_precision": 0.9813313429476698,
+   "pair_recall": 0.9726706959592052,
+   "singleton_acc": 0.9639898196783452,
+   "nonsingleton_f": 0.9764707874214694,
+   "by_country": {
+    "I": 0.9747,
+    "U": 0.97649
+   }
+  },
+  "thr_0.4": {
+   "macro_f05": 0.978770175893118,
+   "n_entities": 331029,
+   "pair_precision": 0.986305302442292,
+   "pair_recall": 0.9699894387920488,
+   "singleton_acc": 0.9720582660962799,
+   "nonsingleton_f": 0.9791667334983873,
+   "by_country": {
+    "I": 0.9773,
+    "U": 0.97975
+   }
+  },
+  "thr_0.5": {
+   "macro_f05": 0.9806892148944685,
+   "n_entities": 331029,
+   "pair_precision": 0.9898752581135745,
+   "pair_recall": 0.9670336947845758,
+   "singleton_acc": 0.9783397411599069,
+   "nonsingleton_f": 0.9808280280945892,
+   "by_country": {
+    "U": 0.98195,
+    "I": 0.97879
+   }
+  },
+  "thr_0.6": {
+   "macro_f05": 0.9817303295315843,
+   "n_entities": 331029,
+   "pair_precision": 0.9924514521511073,
+   "pair_recall": 0.9638461618897243,
+   "singleton_acc": 0.9832132993989278,
+   "nonsingleton_f": 0.9816427117004333,
+   "by_country": {
+    "U": 0.98308,
+    "I": 0.9797
+   }
+  },
+  "thr_0.7": {
+   "macro_f05": 0.9820937688714121,
+   "n_entities": 331029,
+   "pair_precision": 0.9944216600569384,
+   "pair_recall": 0.9602970034750905,
+   "singleton_acc": 0.9865706395191423,
+   "nonsingleton_f": 0.9818292633644995,
+   "by_country": {
+    "U": 0.9835,
+    "I": 0.97997
+   }
+  },
+  "thr_0.8": {
+   "macro_f05": 0.9817762017886215,
+   "n_entities": 331029,
+   "pair_precision": 0.9960433065860738,
+   "pair_recall": 0.9557501071805757,
+   "singleton_acc": 0.9899279796393566,
+   "nonsingleton_f": 0.9812945729227659,
+   "by_country": {
+    "I": 0.97966,
+    "U": 0.98318
+   }
+  },
+  "expected": {
+   "macro_f05": 0.9824408969676334,
+   "n_entities": 331029,
+   "pair_precision": 0.9951541340050232,
+   "pair_recall": 0.9584522776308039,
+   "singleton_acc": 0.9771484269237017,
+   "nonsingleton_f": 0.9827535902710459,
+   "by_country": {
+    "U": 0.98378,
+    "I": 0.98043
+   }
+  },
+  "no_1to1_thr_0.5": {
+   "macro_f05": 0.9806462797446845,
+   "n_entities": 331029,
+   "pair_precision": 0.9898060655247914,
+   "pair_recall": 0.9670868493790498,
+   "singleton_acc": 0.9783397411599069,
+   "nonsingleton_f": 0.980782556221176,
+   "by_country": {
+    "U": 0.98192,
+    "I": 0.97873
+   }
+  }
+ },
+ "stage1_iter": 665,
+ "stage2_iter": 223
+}

@@ -21,7 +21,7 @@ NORM_COLS = ["entity_id", "name_full", "name_core", "name_sig", "name_legal", "n
              "name_nonlatin", "addr_full", "addr_alpha", "addr_nums", "addr_first_num", "addr_state", "addr_empty"]
 
 # raw columns kept after stage 1 (small) for the context model
-KEEP_AFTER_S1 = ["cos_joint", "cos_jskel", "cos_fullskel", "cos_name", "h", "h_rank", "h_gap", "h_ntie",
+KEEP_AFTER_S1 = ["cos_joint", "cos_jskel", "cos_fullskel", "cos_name", "h", "h_rank", "h_gap", "h_ntie", "src_extra",
                  "q_ncand_all", "s1_name_freq", "s1_sig_freq",
                  "r_core_tset", "r_addr_tset", "an_jac", "firstnum_agree", "state_agree", "nonlatin_b",
                  "addr_empty_b", "addr_empty_a", "is_s2", "sig_eq", "nc_jac", "aa_jac", "len_addr_b"]
@@ -45,8 +45,9 @@ def load_norm(work_dir: str, split: str):
 P1_MIN = 0.02
 
 
-def load_cands(work_dir: str, split: str, s1: pl.DataFrame, qs: pl.DataFrame) -> pl.DataFrame:
-    files = sorted(glob.glob(os.path.join(work_dir, "cands", split, "*.parquet")))
+def load_cands(work_dir: str, split: str, s1: pl.DataFrame, qs: pl.DataFrame, country: str | None = None) -> pl.DataFrame:
+    pattern = "*.parquet" if country is None else f"{country}_*.parquet"
+    files = sorted(glob.glob(os.path.join(work_dir, "cands", split, pattern)))
     s1_idx = s1.select("entity_id").with_row_index("a").rename({"entity_id": "s1_id"})
     q_idx = qs.select("entity_id").with_row_index("b").rename({"entity_id": "q_id"})
     parts = []
@@ -54,7 +55,9 @@ def load_cands(work_dir: str, split: str, s1: pl.DataFrame, qs: pl.DataFrame) ->
         c = pl.read_parquet(f)
         c = c.join(s1_idx, on="s1_id", how="inner").join(q_idx, on="q_id", how="inner")
         c = c.with_columns(pl.col("a").cast(pl.Int32), pl.col("b").cast(pl.Int32),
-                           pl.col("country").cast(pl.Categorical)).drop("s1_id", "q_id", "h_rank", "h_gap")
+                           pl.col("country").cast(pl.Categorical),
+                           pl.lit(1 if "_extra" in os.path.basename(f) else 0, dtype=pl.Int8).alias("src_extra"),
+                           ).drop("s1_id", "q_id", "h_rank", "h_gap")
         parts.append(c)
     c = pl.concat(parts)
     del parts

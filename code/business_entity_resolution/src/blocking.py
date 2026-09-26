@@ -60,9 +60,14 @@ BLOCKERS = [
 ]
 
 
+MAX_DF_CAP = 30000  # absolute cap on document frequency (bounds cost on very large indexes)
+
+
 class Blocker:
     def __init__(self, s1_docs: list[str], max_df: float, top_k: int, threads: int = 8, ngram=(1, 1)):
-        self.vec = TfidfVectorizer(analyzer="word", ngram_range=ngram, max_df=max_df, sublinear_tf=True,
+        n = len(s1_docs)
+        md = max_df if max_df >= 0.5 else min(max(int(max_df * n), 2), MAX_DF_CAP)
+        self.vec = TfidfVectorizer(analyzer="word", ngram_range=ngram, max_df=md, sublinear_tf=True,
                                    dtype=np.float32, token_pattern=TOKEN_RE, min_df=2 if ngram[1] > 1 else 1)
         A = self.vec.fit_transform(s1_docs)
         self.AT = A.T.tocsr()

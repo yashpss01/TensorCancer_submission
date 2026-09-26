@@ -81,6 +81,14 @@ def add_features(df: pl.DataFrame, workers: int = 8) -> pl.DataFrame:
     sims["r_addr_full_partial"] = _str_sim(df, "addr_full", fuzz.partial_ratio, "r_addr_full_partial", workers)
     df = df.with_columns([pl.Series(k, v) for k, v in sims.items()])
     fa, fb = pl.col("addr_first_num_a"), pl.col("addr_first_num_b")
+    ia = fa.str.slice(0, 9).cast(pl.Int64, strict=False)
+    ib = fb.str.slice(0, 9).cast(pl.Int64, strict=False)
+    df = df.with_columns(
+        pl.when(ia.is_null() | ib.is_null()).then(-1).otherwise((ia - ib).abs().clip(0, 100000)).alias("fn_absdiff"),
+        pl.when(ia.is_null() | ib.is_null()).then(-1).otherwise(((ia - ib).abs() % 2)).alias("fn_diff_odd"),
+        pl.when(ia.is_null() | ib.is_null() | (pl.max_horizontal(ia, ib) == 0)).then(-1.0)
+          .otherwise(pl.min_horizontal(ia, ib) / pl.max_horizontal(ia, ib)).alias("fn_ratio"),
+    )
     df = df.with_columns(
         pl.when((fa == "") | (fb == "")).then(0)
           .when(fa.str.starts_with(fb) | fb.str.starts_with(fa) | fa.str.ends_with(fb) | fb.str.ends_with(fa)).then(1)
@@ -117,7 +125,7 @@ def add_features(df: pl.DataFrame, workers: int = 8) -> pl.DataFrame:
 
 
 FEATURE_COLS = [
-    "cos_joint", "cos_jskel", "cos_fullskel", "cos_name", "h", "h_rank", "h_gap", "h_ntie", "q_ncand_all",
+    "cos_joint", "cos_jskel", "cos_fullskel", "cos_name", "h", "h_rank", "h_gap", "h_ntie", "q_ncand_all", "src_extra",
     "s1_name_freq", "s1_sig_freq", "fn_lev", "fn_affix", "fn_lendiff", "r_addr_full_partial",
     "nc_na", "nc_nb", "nc_ninter", "nc_nunion", "nc_first_eq", "nc_jac", "nc_overlap", "nc_ndiff",
     "ns_na", "ns_nb", "ns_ninter", "ns_first_eq", "ns_jac", "ns_overlap",

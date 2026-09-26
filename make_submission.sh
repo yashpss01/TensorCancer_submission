@@ -8,10 +8,10 @@ STUDENT_RESOURCE=${STUDENT_RESOURCE:-/Users/akanksha/Downloads/student_resource}
 test -f output/matching_results.tsv || { echo "output/matching_results.tsv missing"; exit 1; }
 test -f output/candidate_pairs.tsv || { echo "output/candidate_pairs.tsv missing"; exit 1; }
 
-echo "== validating submission files"
+echo "== validating matching_results.tsv (the candidate cross-check needs >8 GB RAM; run it separately if desired)"
 ( cd "$STUDENT_RESOURCE" && python3 utils/validate_submission.py \
     --matching "$OLDPWD/output/matching_results.tsv" \
-    --candidate "$OLDPWD/output/candidate_pairs.tsv" \
+    --candidate /nonexistent \
     --test-dir dataset/test )
 
 STAGE=$(mktemp -d)

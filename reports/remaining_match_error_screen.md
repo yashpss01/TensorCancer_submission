@@ -37,6 +37,25 @@ from candidate IDs at inference time, but these development gains are small.
 The model, thresholds, and full country/source counts are in
 [target_source_context_screen.json](target_source_context_screen.json).
 
+## More of the same training pairs
+
+We also held the rich model architecture and decision threshold (0.775)
+fixed, fitted it on one exposed cohort, then fitted it on that cohort plus a
+second disjoint exposed cohort. Each model was evaluated on the remaining
+third cohort. Training volume roughly doubled from 0.50 million to 1.00
+million candidate pairs; no candidate retrieval or feature recipe changed.
+
+| Exposed test cohort | One-cohort overall / India macro F0.5 | Two-cohort overall / India |
+| --- | --- | --- |
+| v1 | 98.8298% / 98.6712% | 98.8449% / 98.7162% |
+| v2 | 98.7292% / 98.4355% | 98.7537% / 98.5000% |
+| final | 98.7643% / 98.5949% | 98.7707% / 98.5541% |
+
+The pooled model improves overall by only 0.0064–0.0245 points, and India's
+result falls on the final cohort. The final row reproduces the earlier frozen
+rich score at this fixed threshold; it is **not** a new untouched
+confirmation. Full metrics: [rich_training_scale_screen.json](rich_training_scale_screen.json).
+
 To test whether local text collisions force unavoidable errors, we grouped
 each query's candidates by exact `(target name, address, country)` and by the
 same fields after the existing normalization. In each cohort of roughly
@@ -50,7 +69,8 @@ sufficient. Saved counts: [candidate_text_collision_screen.json](candidate_text_
 ## Decision
 
 Do not promote either variant or revise the 98.7707% frozen confirmation
-claim. The 99.5% goal remains unmet. The narrow fixes here do not bridge the
-gap; further improvement needs stronger discriminative evidence for changed
-names and address-poor records, evaluated on a newly reserved disjoint
-cohort before any quality claim. No new cloud job or Modal spend was used.
+claim. The 99.5% goal remains unmet. The narrow fixes and extra examples here
+do not bridge the gap; further improvement needs stronger discriminative
+evidence for changed names and address-poor records, evaluated on a newly
+reserved disjoint cohort before any quality claim. No new cloud job or Modal
+spend was used.

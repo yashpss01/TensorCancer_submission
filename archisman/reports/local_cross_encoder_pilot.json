@@ -1,0 +1,23 @@
+{
+  "scope": "v1 exposed entity-disjoint train/calibration; v2 exposed development test; no fresh confirmation",
+  "device": "mps",
+  "epochs": 1,
+  "batch_size": 64,
+  "max_length": 96,
+  "train_pairs": 36469,
+  "validation_pairs": 9402,
+  "train_positive_pairs": 27275,
+  "train_negative_pairs": 9194,
+  "v2_scored_pairs": 41301,
+  "v2_hard_auc": 0.9867285554505738,
+  "selected_on_v1_validation": {
+    "blend": 0.25,
+    "threshold": 0.7,
+    "macro_f0_5": 0.9859203300987938
+  },
+  "v2_original_baseline": 0.9831077662024145,
+  "v2_changed_overall": 0.9862687868212144,
+  "v2_changed_India": 0.983027243871618,
+  "v2_changed_US": 0.9884307160329723,
+  "seconds": 223.76409716671333
+}

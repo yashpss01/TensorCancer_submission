@@ -1,0 +1,112 @@
+{
+  "scope": "two exposed 10k reduced-pool cross-cohort screens only",
+  "candidate_lists": "unchanged",
+  "directions": {
+    "fresh_10k_v1_to_fresh_10k_v2": {
+      "threshold_from_global_training_crossfit": 0.7,
+      "train_s2_pairs": 272383,
+      "train_s3_pairs": 231169,
+      "test_s2_pairs": 270195,
+      "test_s3_pairs": 229933,
+      "global_rich": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9875635291279954,
+          "tp": 33770,
+          "fp": 185,
+          "fn": 790
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9847237645925588,
+          "tp": 13531,
+          "fp": 93,
+          "fn": 398
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9894574944399276,
+          "tp": 20239,
+          "fp": 92,
+          "fn": 392
+        }
+      },
+      "separate_source_models": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9875390790791782,
+          "tp": 33757,
+          "fp": 186,
+          "fn": 803
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9850831372521409,
+          "tp": 13520,
+          "fp": 89,
+          "fn": 409
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9891770559503194,
+          "tp": 20237,
+          "fp": 97,
+          "fn": 394
+        }
+      }
+    },
+    "fresh_10k_v2_to_fresh_10k_v1": {
+      "threshold_from_global_training_crossfit": 0.825,
+      "train_s2_pairs": 270195,
+      "train_s3_pairs": 229933,
+      "test_s2_pairs": 272383,
+      "test_s3_pairs": 231169,
+      "global_rich": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9879591016924197,
+          "tp": 33512,
+          "fp": 133,
+          "fn": 959
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.986374909520628,
+          "tp": 13481,
+          "fp": 57,
+          "fn": 481
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.9890351818494132,
+          "tp": 20031,
+          "fp": 76,
+          "fn": 478
+        }
+      },
+      "separate_source_models": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9870138168685509,
+          "tp": 33472,
+          "fp": 134,
+          "fn": 999
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.9859144251796131,
+          "tp": 13477,
+          "fp": 59,
+          "fn": 485
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.98776059090411,
+          "tp": 19995,
+          "fp": 75,
+          "fn": 514
+        }
+      }
+    }
+  }
+}

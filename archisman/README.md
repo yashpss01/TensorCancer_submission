@@ -1,0 +1,9 @@
+# TensorCancer — Archisman branch
+
+This branch preserves Archisman's candidate blocking and XGBoost matching work in the same top-level handoff layout used by `Akanksha`: `code/`, `output/`, a filled `Documentation_template.md`, and a submission packaging script.
+
+The packaged default inference matcher scored **98.4117% per-S1 macro F0.5** on its original 20,000-record reduced-pool holdout. A separately frozen **rich** matcher later improved from 98.3538% to **98.7707%** on a disjoint 10,000-record confirmation batch, with 98.5541% India and 98.9204% US. Its bounded rescore command is now packaged under `code/business_entity_resolution/src/rich_infer.py` and reproduced the confirmation TSVs exactly; it is optional and does not change `infer.py run` by itself. The 99.5% goal remains unmet. Neither result is a Portal or France score. See [the original holdout review](reports/matching_round5_holdout_review.md), [the newer confirmation report](reports/rich_pair_fresh_confirmation.md), and the [experiment ledger](reports/experiment_ledger.md).
+
+The required `output/matching_results.tsv` and `output/candidate_pairs.tsv` must be generated on the provided test data, validated, and then packaged for submission. They are not pre-filled with training-holdout predictions. The [pipeline README](code/business_entity_resolution/README.md) gives the commands for self-contained inference, including ordered shards and merging, and the [output note](output/README.md) explains what remains for Portal delivery. The packaged inference path passed a tiny end-to-end validator check, but the full test set has not been processed.
+
+The `reports/` and `artifacts/` directories preserve the experiment audit trail. The final challenge zip should include the runnable `code/business_entity_resolution/` folder, both generated TSVs, and the completed methodology document. The raw challenge dataset and large scratch arrays are intentionally outside Git.

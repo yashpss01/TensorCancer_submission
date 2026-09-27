@@ -1,0 +1,35 @@
+{
+  "status": "frozen_before_fresh_v2_truth",
+  "selection_scope": "exposed fresh-v1 10k, two entity-disjoint development folds",
+  "threshold": 0.7,
+  "feature_names": [
+    "frozen_probability",
+    "core_equal",
+    "target_address_empty",
+    "india",
+    "log_target_core_frequency",
+    "log_source_core_frequency"
+  ],
+  "model_params": {
+    "n_estimators": 160,
+    "max_depth": 3,
+    "learning_rate": 0.05,
+    "min_child_weight": 20,
+    "subsample": 0.85,
+    "colsample_bytree": 0.9,
+    "reg_lambda": 5,
+    "tree_method": "hist",
+    "n_jobs": 4,
+    "random_state": 20260927,
+    "eval_metric": "logloss"
+  },
+  "training_s1": 10000,
+  "training_pairs": 503552,
+  "positive_pairs": 34379,
+  "source1_sha256": "0eae2679f5179190a6dd6c155d3cbc03ae7dd502b59de383fc421fa07809705b",
+  "truth_sha256": "1df21053ea7d2360998176f652f6dafa925e9b7b72a217ecefffbb71bb16e6d7",
+  "pair_scores_sha256": "36b20716583cf2878eb7f3d42a28586b097ff620e21361cc90d75d956c42026f",
+  "core_cache_manifest_sha256": "c2b1b0919a07574b608a5db7d8f68ef1a87050e08ea6b817c0e54504aee4a071",
+  "screen_report_sha256": "5a9fd7e04280b67772785fb04c2ef385420790b95922b5c925b34628dd00f2c7",
+  "model_sha256": "394b603c915227024142f51aa6230661bd55dc7aa44cbacf16a319db76586af0"
+}

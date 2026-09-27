@@ -1,0 +1,153 @@
+{
+  "scope": "two already exposed 10k reduced-pool cohorts",
+  "candidate_lists": "unchanged",
+  "directions": {
+    "fresh_10k_v1_to_fresh_10k_v2": {
+      "thresholds_selected_on_training_crossfit": {
+        "overall": 0.7,
+        "India": 0.75,
+        "US": 0.7
+      },
+      "test_global_threshold": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9875635291279954,
+          "tp": 33770,
+          "fp": 185,
+          "fn": 790
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9847237645925588,
+          "tp": 13531,
+          "fp": 93,
+          "fn": 398
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9894574944399276,
+          "tp": 20239,
+          "fp": 92,
+          "fn": 392
+        }
+      },
+      "test_country_thresholds": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9874858645465605,
+          "tp": 33737,
+          "fp": 177,
+          "fn": 823
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9845296516672033,
+          "tp": 13498,
+          "fp": 85,
+          "fn": 431
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9894574944399276,
+          "tp": 20239,
+          "fp": 92,
+          "fn": 392
+        }
+      }
+    },
+    "fresh_10k_v2_to_fresh_10k_v1": {
+      "thresholds_selected_on_training_crossfit": {
+        "overall": 0.825,
+        "India": 0.675,
+        "US": 0.825
+      },
+      "test_global_threshold": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9879591016924197,
+          "tp": 33512,
+          "fp": 133,
+          "fn": 959
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.986374909520628,
+          "tp": 13481,
+          "fp": 57,
+          "fn": 481
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.9890351818494132,
+          "tp": 20031,
+          "fp": 76,
+          "fn": 478
+        }
+      },
+      "test_country_thresholds": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.98825026260286,
+          "tp": 33625,
+          "fp": 158,
+          "fn": 846
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.9870947139963767,
+          "tp": 13594,
+          "fp": 82,
+          "fn": 368
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.9890351818494132,
+          "tp": 20031,
+          "fp": 76,
+          "fn": 478
+        }
+      }
+    }
+  },
+  "exposed_final_threshold_oracle_diagnostic": {
+    "scope": "selection-optimistic ceiling for this fixed score ordering only",
+    "frozen_0p775": {
+      "overall": {
+        "s1": 10000,
+        "macro_f05": 0.987707101909527,
+        "tp": 33952,
+        "fp": 174,
+        "fn": 878
+      },
+      "India": {
+        "s1": 4087,
+        "macro_f05": 0.9855407868296433,
+        "tp": 13727,
+        "fp": 78,
+        "fn": 411
+      },
+      "US": {
+        "s1": 5913,
+        "macro_f05": 0.9892044348592114,
+        "tp": 20225,
+        "fp": 96,
+        "fn": 467
+      }
+    },
+    "best_exact_thresholds_using_exposed_labels": {
+      "overall": {
+        "macro_f05": 0.9878839080604898,
+        "threshold": 0.7265044450759888
+      },
+      "India": {
+        "macro_f05": 0.985993475351379,
+        "threshold": 0.7269846796989441
+      },
+      "US": {
+        "macro_f05": 0.9892979181610617,
+        "threshold": 0.7664554119110107
+      },
+      "country_specific_combined_macro_f05": 0.9879473923847443
+    }
+  }
+}

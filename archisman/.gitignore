@@ -1,0 +1,16 @@
+dataset/
+work/
+inference_index/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.zip
+*.sqlite
+*.npy
+*.jsonl
+*.log
+output/*.tsv
+output/*.partial
+output/inference_meta.json
+artifacts/**/*.tsv

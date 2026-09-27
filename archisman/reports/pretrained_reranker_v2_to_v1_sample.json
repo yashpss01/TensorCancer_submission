@@ -1,0 +1,35 @@
+{
+  "scope": "sampled exposed-development pair discrimination only; not per-S1 macro F0.5",
+  "train_cohort": "fresh_10k_v2",
+  "test_cohort": "fresh_10k_v1",
+  "model": "BAAI/bge-reranker-v2-m3",
+  "model_revision": "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e",
+  "device": "mps",
+  "scoring_seconds": 26.178971957881004,
+  "overall": {
+    "pairs": 1000,
+    "positives": 445,
+    "rich_auc": 0.875906468266019,
+    "reranker_auc": 0.6108411782569085,
+    "rich_average_precision": 0.8511987594541469,
+    "reranker_average_precision": 0.5046764369229394
+  },
+  "countries": {
+    "India": {
+      "pairs": 465,
+      "positives": 204,
+      "rich_auc": 0.8702764630756518,
+      "reranker_auc": 0.6985481932236497,
+      "rich_average_precision": 0.8312838778530527,
+      "reranker_average_precision": 0.5759881546283565
+    },
+    "US": {
+      "pairs": 535,
+      "positives": 241,
+      "rich_auc": 0.8830694103367489,
+      "reranker_auc": 0.5351920851328082,
+      "rich_average_precision": 0.8703895404719405,
+      "reranker_average_precision": 0.456973952617945
+    }
+  }
+}

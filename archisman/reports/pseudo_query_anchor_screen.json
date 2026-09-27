@@ -1,0 +1,119 @@
+{
+  "scope": "exposed first and second fresh 10k only; cross-cohort development, no sealed confirmation",
+  "pseudo_query_scores": true,
+  "anchor_feature_names": [
+    "cross_anchor_count",
+    "cross_anchor_max_probability",
+    "cross_anchor_core_ratio",
+    "cross_anchor_core_token_set",
+    "cross_anchor_core_wratio",
+    "cross_anchor_exact_core",
+    "cross_anchor_address_ratio",
+    "cross_anchor_exact_address",
+    "cross_anchor_number_overlap",
+    "cross_anchor_name_probability_product",
+    "same_source_anchor_core_ratio",
+    "candidate_is_frozen_anchor"
+  ],
+  "directions": {
+    "fresh_10k_v1_to_fresh_10k_v2": {
+      "threshold_from_train_crossfit": 0.675,
+      "train_crossfit": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9884255965577778,
+          "tp": 33791,
+          "fp": 218,
+          "fn": 680
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.9863116659070743,
+          "tp": 13617,
+          "fp": 98,
+          "fn": 345
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.9898615074699687,
+          "tp": 20174,
+          "fp": 120,
+          "fn": 335
+        }
+      },
+      "test": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9876909760680115,
+          "tp": 33875,
+          "fp": 216,
+          "fn": 685
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9857754738405258,
+          "tp": 13591,
+          "fp": 102,
+          "fn": 338
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9889685097256495,
+          "tp": 20284,
+          "fp": 114,
+          "fn": 347
+        }
+      }
+    },
+    "fresh_10k_v2_to_fresh_10k_v1": {
+      "threshold_from_train_crossfit": 0.7,
+      "train_crossfit": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9872601845051869,
+          "tp": 33860,
+          "fp": 228,
+          "fn": 700
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9851568341166603,
+          "tp": 13587,
+          "fp": 107,
+          "fn": 342
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9886630024589284,
+          "tp": 20273,
+          "fp": 121,
+          "fn": 358
+        }
+      },
+      "test": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9890090376529636,
+          "tp": 33800,
+          "fp": 189,
+          "fn": 671
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.9878248442611081,
+          "tp": 13621,
+          "fp": 80,
+          "fn": 341
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.989813414188657,
+          "tp": 20179,
+          "fp": 109,
+          "fn": 330
+        }
+      }
+    }
+  },
+  "seconds": 29.922495250124484
+}

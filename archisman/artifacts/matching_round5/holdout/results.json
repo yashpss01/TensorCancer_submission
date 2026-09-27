@@ -1,0 +1,109 @@
+{
+  "status": "PASS",
+  "frozen_config_sha256": "da42e4b42e68270d9175077652864923a419ab261669b117324f55fb4ff2c538",
+  "holdout_rows": "60001–80000",
+  "target_pool": "Sealed reduced 409141-target pool",
+  "selection_threshold": 0.74,
+  "development": {
+    "overall": {
+      "queries": 10000,
+      "macro_f05": 0.9836579230000698,
+      "pair_tp": 33564,
+      "pair_fp": 307,
+      "pair_fn": 852,
+      "singleton_count": 584,
+      "singleton_correct": 573,
+      "perfect_entities": 8963
+    },
+    "countries": {
+      "India": {
+        "queries": 4018,
+        "macro_f05": 0.9810845157444831,
+        "pair_tp": 13602,
+        "pair_fp": 129,
+        "pair_fn": 414,
+        "singleton_count": 226,
+        "singleton_correct": 222,
+        "perfect_entities": 3543
+      },
+      "US": {
+        "queries": 5982,
+        "macro_f05": 0.9853864335906658,
+        "pair_tp": 19962,
+        "pair_fp": 178,
+        "pair_fn": 438,
+        "singleton_count": 358,
+        "singleton_correct": 351,
+        "perfect_entities": 5420
+      }
+    }
+  },
+  "holdout": {
+    "overall": {
+      "queries": 20000,
+      "macro_f05": 0.9841168595354689,
+      "pair_tp": 67723,
+      "pair_fp": 637,
+      "pair_fn": 1607,
+      "singleton_count": 1046,
+      "singleton_correct": 1025,
+      "perfect_entities": 17987
+    },
+    "countries": {
+      "India": {
+        "queries": 8061,
+        "macro_f05": 0.9834968064966862,
+        "pair_tp": 27315,
+        "pair_fp": 241,
+        "pair_fn": 754,
+        "singleton_count": 401,
+        "singleton_correct": 391,
+        "perfect_entities": 7183
+      },
+      "US": {
+        "queries": 11939,
+        "macro_f05": 0.984535508295468,
+        "pair_tp": 40408,
+        "pair_fp": 396,
+        "pair_fn": 853,
+        "singleton_count": 645,
+        "singleton_correct": 634,
+        "perfect_entities": 10804
+      }
+    }
+  },
+  "blocking": {
+    "overall": {
+      "queries": 20000,
+      "candidate_pairs": 991322,
+      "true_links": 69330,
+      "retrieved_true_links": 69171,
+      "recall": 0.9977066205106014
+    },
+    "countries": {
+      "India": {
+        "queries": 8061,
+        "candidate_pairs": 500599,
+        "true_links": 28069,
+        "retrieved_true_links": 27969,
+        "recall": 0.9964373508140654
+      },
+      "US": {
+        "queries": 11939,
+        "candidate_pairs": 490723,
+        "true_links": 41261,
+        "retrieved_true_links": 41202,
+        "recall": 0.998570078282155
+      }
+    }
+  },
+  "oracle_macro_f05": {
+    "overall": 0.9991976697672741,
+    "countries": {
+      "India": 0.9985279894549023,
+      "US": 0.9996498259778469
+    }
+  },
+  "probability_sha256": "ea0e9015777caad144b5c466c856e0977c393976e79b9dc4542fc4b7f451824d",
+  "feature_meta_sha256": "6675fa9fd2c68864e19a6edf36c1428fb0f6ce8dcf1c3624f8740a743f133f6d"
+}

@@ -22,13 +22,16 @@ NORM_COLS = ["entity_id", "name_full", "name_core", "name_sig", "name_legal", "n
 
 # raw columns kept after stage 1 (small) for the context model
 KEEP_AFTER_S1 = ["cos_joint", "cos_jskel", "cos_fullskel", "cos_name", "h", "h_rank", "h_gap", "h_ntie", "src_extra",
-                 "q_ncand_all", "s1_name_freq", "s1_sig_freq",
+                 "q_ncand_all", "s1_name_freq", "s1_sig_freq", "s1_addr_freq", "s1_numstreet_freq",
+                 "r_full", "r_nospace",
                  "r_core_tset", "r_addr_tset", "an_jac", "firstnum_agree", "state_agree", "nonlatin_b",
                  "addr_empty_b", "addr_empty_a", "is_s2", "sig_eq", "nc_jac", "aa_jac", "len_addr_b"]
 
 CONTEXT_COLS = ["p1", "p1_logit", "q_p1_max", "q_p1_ratio", "q_p1_rank", "q_p1_second", "q_p1_gap", "q_ncand",
                 "q_p1_ntie", "q_n_strong", "q_same_name_cnt",
                 "s_top_cnt", "s_top_cnt_s2", "s_top_cnt_s3", "s_strong_cnt", "s_p1_mean_others", "s_ncand",
+                "s_num_agree_cnt", "s_num_diff_cnt", "s_num_agree_frac",
+                "q_name_gap", "q_name_rank", "q_rfull_gap", "q_rfull_rank", "q_nospace_gap",
                 "q_h_rank_of_top", "q_is_top"]
 STAGE2_COLS = CONTEXT_COLS + KEEP_AFTER_S1
 
@@ -69,12 +72,20 @@ def load_cands(work_dir: str, split: str, s1: pl.DataFrame, qs: pl.DataFrame, co
     ).with_columns(
         (pl.col("h_gap") < 1e-4).cast(pl.Int16).sum().over("b").alias("h_ntie"),
     )
-    # how many Source-1 entities of the same country share this candidate's name
+    # how many Source-1 entities of the same country share this candidate's name, and
+    # how many share its address (co-located businesses: the address stops being
+    # discriminative and the name has to decide)
     nf = s1.group_by("country", "name_core").len().rename({"len": "s1_name_freq"})
     sf = s1.group_by("country", "name_sig").len().rename({"len": "s1_sig_freq"})
-    s1f = (s1.with_row_index("a").with_columns(pl.col("a").cast(pl.Int32))
+    s1k = s1.select("country", "name_core", "name_sig", "addr_full", "addr_empty",
+                    (pl.col("addr_first_num") + "|" + pl.col("addr_alpha")).alias("_numstreet"))
+    af = s1k.filter(~pl.col("addr_empty")).group_by("country", "addr_full").len().rename({"len": "s1_addr_freq"})
+    nsf = s1k.filter(~pl.col("addr_empty")).group_by("country", "_numstreet").len().rename({"len": "s1_numstreet_freq"})
+    s1f = (s1k.with_row_index("a").with_columns(pl.col("a").cast(pl.Int32))
            .join(nf, on=["country", "name_core"], how="left").join(sf, on=["country", "name_sig"], how="left")
-           .select("a", pl.col("s1_name_freq").cast(pl.Int32), pl.col("s1_sig_freq").cast(pl.Int32)))
+           .join(af, on=["country", "addr_full"], how="left").join(nsf, on=["country", "_numstreet"], how="left")
+           .select("a", pl.col("s1_name_freq").cast(pl.Int32), pl.col("s1_sig_freq").cast(pl.Int32),
+                   pl.col("s1_addr_freq").fill_null(0).cast(pl.Int32), pl.col("s1_numstreet_freq").fill_null(0).cast(pl.Int32)))
     c = c.join(s1f, on="a", how="left")
     return c
 
@@ -173,6 +184,31 @@ def add_context(df: pl.DataFrame) -> pl.DataFrame:
     ).with_columns(
         ((pl.col("_s_sum") - pl.col("p1")) / pl.max_horizontal(pl.col("s_ncand") - 1, 1)).alias("s_p1_mean_others"),
     ).drop("_s_sum")
+    # name competition among the candidates of the same record: is this the best name
+    # match, and by how much?  (decisive when several candidates share the address)
+    def _gap_rank(col: str, gap_name: str, rank_name: str | None):
+        top1 = pl.col(col).max().over("b")
+        top2 = pl.col(col).sort(descending=True).slice(1, 1).first().over("b").fill_null(-1.0)
+        other = pl.when(pl.col(col) >= top1).then(top2).otherwise(top1)
+        exprs = [(pl.col(col) - other).alias(gap_name)]
+        if rank_name:
+            exprs.append(pl.col(col).rank(method="min", descending=True).over("b").alias(rank_name))
+        return exprs
+    df = df.with_columns(*_gap_rank("r_core_tset", "q_name_gap", "q_name_rank"),
+                         *_gap_rank("r_full", "q_rfull_gap", "q_rfull_rank"),
+                         *_gap_rank("r_nospace", "q_nospace_gap", None))
+    # sibling consistency: do the entity's other confident records carry the Source-1
+    # house number (agree) or a different one (diff)?  Decoys typically differ while the
+    # true siblings agree.
+    strong = pl.col("p1") > 0.5
+    agree = strong & (pl.col("firstnum_agree") == 1)
+    differ = strong & (pl.col("firstnum_agree") == -1)
+    df = df.with_columns(
+        (agree.cast(pl.Int32).sum().over("a") - agree.cast(pl.Int32)).alias("s_num_agree_cnt"),
+        (differ.cast(pl.Int32).sum().over("a") - differ.cast(pl.Int32)).alias("s_num_diff_cnt"),
+    ).with_columns(
+        (pl.col("s_num_agree_cnt") / pl.max_horizontal(pl.col("s_num_agree_cnt") + pl.col("s_num_diff_cnt"), 1)).alias("s_num_agree_frac"),
+    )
     # exclude self from top counts
     df = df.with_columns(
         (pl.col("s_top_cnt") - top.cast(pl.Int32)).alias("s_top_cnt"),

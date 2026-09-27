@@ -126,7 +126,7 @@ def add_features(df: pl.DataFrame, workers: int = 8) -> pl.DataFrame:
 
 FEATURE_COLS = [
     "cos_joint", "cos_jskel", "cos_fullskel", "cos_name", "h", "h_rank", "h_gap", "h_ntie", "q_ncand_all", "src_extra",
-    "s1_name_freq", "s1_sig_freq", "fn_lev", "fn_affix", "fn_lendiff", "r_addr_full_partial",
+    "s1_name_freq", "s1_sig_freq", "s1_addr_freq", "s1_numstreet_freq", "fn_lev", "fn_affix", "fn_lendiff", "fn_absdiff", "fn_diff_odd", "fn_ratio", "r_addr_full_partial",
     "nc_na", "nc_nb", "nc_ninter", "nc_nunion", "nc_first_eq", "nc_jac", "nc_overlap", "nc_ndiff",
     "ns_na", "ns_nb", "ns_ninter", "ns_first_eq", "ns_jac", "ns_overlap",
     "aa_na", "aa_nb", "aa_ninter", "aa_nunion", "aa_first_eq", "aa_jac", "aa_overlap", "aa_ndiff",

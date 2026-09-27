@@ -1,14 +1,14 @@
 # ML Challenge 2026: Business Entity Resolution Solution Template
 
 **Team Name:** TensorCancer  
-**Team Members:** Akanksha, Yash  
-**Submission Date:** 26 September 2026
+**Team Members:** Pushkar Sharma, Yash Pratap Singh Solanki, Archisman Choudhury, Akanksha Sharma  
+**Submission Date:** 27 September 2026
 
 ---
 
 ## 1. Executive Summary
 
-We resolve Source-2/3 records to Source-1 entities with a three-part pipeline: (1) rule-based, language-agnostic normalisation of names and addresses, including a token-level Indic-script → English transliteration dictionary learned only from the training pairs; (2) scalable candidate generation with four word-level TF-IDF indexes per country queried by sparse matrix products, trimmed by a transparent rule to ~10 candidates per Source-2/3 record; (3) a two-stage LightGBM matcher (pairwise features, then "competition" features that compare each candidate with the other candidates of the same record and the same entity), followed by a one-to-one assignment and a per-entity decision rule that maximises the expected F0.5. Key innovations are the learned transliteration dictionary (raises Indic-name blocking recall from 92% to 99%), the joint name+address bigram index, and the expected-F0.5 decision that treats singletons and multi-match entities differently.
+We resolve Source-2/3 records to Source-1 entities with a three-part pipeline: (1) rule-based, language-agnostic normalisation of names and addresses, including an Indic-script → English token dictionary learned only from the training pairs; (2) scalable candidate generation with four word-level TF-IDF indexes per country queried by sparse matrix products plus a character-trigram pass for hard records, trimmed by a transparent rule; (3) a two-stage LightGBM matcher — pairwise similarity features, then "competition" features that compare each candidate with the other candidates of the same record and of the same entity — followed by a one-to-one assignment and a per-entity decision that maximises the expected F0.5. Models are trained and validated on the full training set at its true density of decoys; the held-out macro F0.5 is 0.9842 (India 0.9822, US 0.9855).
 
 ---
 
@@ -18,31 +18,31 @@ We resolve Source-2/3 records to Source-1 entities with a three-part pipeline: (
 
 Findings from the exploratory analysis of the training data (2.2M Source-1, 5.0M Source-2, 5.3M Source-3 records):
 
-* **Structure.** Every Source-2/3 record matches at most one Source-1 entity (7.64M matched records, all distinct); 26% of Source-2/3 records are distractors with no Source-1 counterpart; 5.6% of Source-1 entities are singletons; matched entities have on average 3.46 records (up to 11). Country never differs between a record and its entity.
-* **Names are not unique.** Only 46% of Indian Source-1 entities have a unique normalised name; the vocabulary of business-name words is small (~50k distinct tokens, ~1.3k distinct Indic tokens), so many entities share a name and the address is the discriminator. 38% of singletons share an exact name with some Source-2/3 record.
-* **Script.** 18% of the Indian matched records carry the business name in an Indic script (Devanagari, Bengali, Tamil, Telugu, Kannada, Gujarati, Punjabi, Malayalam, Odia). Their addresses are in Latin script but frequently truncated.
-* **Name noise.** Case, accents ("Ínc", "Cénter"), legal-suffix variants (Pvt/Private, Ltd/Limited, `[LLC]`, `(ID: 59206)`), dropped or added filler words (Center, Services, Dr, Smt), word-order shuffles ("Parr, Evvy Center"), typos (0 for O, transposed letters), domain-ification ("Summitanimalhospital.Com"), hashtags ("#4443ocean").
-* **Address noise.** Abbreviations (Rd/Road, Ave), state name vs. abbreviation (Iowa/IA, Telangana/TG, Indic-script state names), zero-padded or altered house numbers ("001375", "275"→"27"), "City" suffixes, component re-ordering, dropped components (no PIN, no street), "Door No / H.No / ##" prefixes, `<NULL>` / `N/A` tokens, 3.3% of matched records have an empty address.
-* **Distractors** are independent businesses, not near-copies of Source-1 entities (0.2% share an exact address with a Source-1 entity), so false merges come from generic names, which addresses must reject.
-* **Test set** adds France (15% of Source-1 entities) and a new "small shop" name distribution (Motors, Stores, Bakery, …) that is absent from the training vocabulary, so nothing may be hard-coded to the training countries or words.
+* **Structure.** Every Source-2/3 record matches at most one Source-1 entity (7.64M matched records, all distinct); 26% of Source-2/3 records have no Source-1 counterpart; 5.6% of Source-1 entities are singletons; matched entities have 3.46 records on average (up to 11). The country label never differs between a record and its entity.
+* **Decoys.** Most unmatched records are deliberate near-copies of a Source-1 entity: same street, similar name (often a filler word added, e.g. "… Group Group", "… Co"), house number shifted by a small offset. Among rank-1 false candidates in training, 86% (US) have a different house number and 63% of those differ by 3–21; among true matches only 12% have a different number and 77% of those differ by more than 100 (digit drops such as "1061" → "61", zero padding). The house number is therefore the key discriminator between a true record and a decoy.
+* **Names are not unique.** Only 46% of Indian and 53% of US Source-1 entities have a unique normalised name; the name vocabulary is small, so the address decides most matches, and an empty-address record with a common name is inherently ambiguous (the true-match rate of an exact-name, empty-address pair falls from 74% when the name is unique to 3.5% when ≥ 11 entities share it).
+* **Script.** 18% of Indian matched records carry the name in an Indic script (Devanagari, Bengali, Tamil, Telugu, Kannada, Gujarati, Punjabi, Malayalam, Odia) while the Source-1 name is in Latin script.
+* **Name noise.** Case, accents, legal-suffix variants (Pvt/Private, Ltd/Limited, `[LLC]`, `(ID: 59206)`), added or dropped filler words, word-order shuffles, typos (0/O), domain-style names ("summitanimalhospital.com"), hashtags, DBA / trade names (1.8% of true pairs have an unrelated brand-like name at the entity's address).
+* **Address noise.** Abbreviations, state name vs. code (including Indic-script state names), zero-padded or altered house numbers, "City" suffixes, component re-ordering, dropped components, "Door No / H.No / ##" prefixes, `<NULL>` / `N/A`; 3.3% of matched records have an empty address.
+* **Test set.** Adds France (15% of Source-1 entities, no training data). French Source-1 entities share an address far more often (11.8% share their exact address with another entity, groups of up to 101 at one address, vs. 4–5% in India/US), 86% of French house numbers are below 100, and the test has 5.75 Source-2/3 records per Source-1 entity versus 4.68 in training. India adds a "small shop" vocabulary (Motors, Stores, Bakery …) absent from training. Nothing in the pipeline is hard-coded to the training countries.
 
 ### 2.2 Solution Strategy
 
-**Approach Type:** Blocking + two-stage classifier + global assignment  
-**Core Innovation:** learned token transliteration dictionary; joint name+address TF-IDF bigram index with rule-based trimming; competition features + expected-F0.5 decision.
+**Approach Type:** Blocking + two-stage gradient-boosted classifier + global one-to-one assignment + expected-F0.5 decision  
+**Core Innovation:** learned Indic token dictionary; joint name+address bigram TF-IDF blocking; decoy-aware house-number features; competition features computed over complete candidate groups with cross-fitted stage-1 scores; exact expected-F0.5 subset selection per entity.
 
-Pipeline (all steps run per country label, whatever the label is):
+Pipeline (every step runs per country label, whatever the label is):
 
-1. `normalize.py` — one normalised view set per record: `name_full`, `name_core` (legal words removed), `name_sig` (filler words removed), `name_nospace`, `name_sorted`, legal-form set, phonetic skeleton; `addr_full`, `addr_alpha` (words without state), `addr_nums`, first house number, detected state, empty flag. Indic tokens are mapped through the learned dictionary (`translit.py`) with a small rule-based fallback for trade words; the rest is transliterated with `unidecode`.
-2. `blocking.py` — candidate generation (Section 3).
-3. `features.py` + `pipeline_core.py` — 66 pairwise features, stage-1 LightGBM, context features, stage-2 LightGBM.
-4. Decision — one-to-one assignment on the Source-2/3 side, then per-entity expected-F0.5 subset selection.
+1. `translit.py` learns `translit_dict.json` (1,347 Indic tokens) by positional alignment of matched training names; `normalize.py` produces the normalised views of every name and address (`preprocess.py` applies it to all files in parallel).
+2. `blocking.py` + `blocking_extra.py` — candidate generation (Section 3).
+3. `features.py` + `pipeline_core.py` — 80 pairwise features → stage-1 LightGBM → 56 context features → stage-2 LightGBM (`train_full.py`).
+4. `predict.py` — one-to-one assignment on the Source-2/3 side, then per-entity expected-F0.5 subset selection; writes both submission files.
 
 ---
 
 ## 3. Candidate Generation (Blocking)
 
-Every Source-1 record is indexed per country with four word-level TF-IDF vectorisers (sub-linear tf, `max_df` pruning of very common tokens for speed). Every Source-2/3 record of the same country is compared against the whole index with a sparse matrix product (`sparse_dot_topn`), keeping the top-k cosine neighbours of each index:
+Every Source-1 record is indexed per country with four word-level TF-IDF vectorisers (sub-linear tf; very common tokens pruned at 5% document frequency, capped at 30,000 documents). Every Source-2/3 record of the same country is compared against the whole index with a sparse matrix product (`sparse_dot_topn`, multithreaded C++), keeping the top-k cosine neighbours of each index:
 
 | index | document | k |
 | --- | --- | --- |
@@ -51,13 +51,13 @@ Every Source-1 record is indexed per country with four word-level TF-IDF vectori
 | fullskel | skeletons of name and address words + numbers | 10 |
 | name | `name_core` only (rescues empty-address records) | 20 |
 
-The union of the four retrievals is scored with a transparent heuristic `h = max(cos_joint, cos_jskel, cos_fullskel) + 0.25·cos_name` and trimmed to: the top-4 by `h`, plus any candidate within the top-40 that has an identical normalised name (or identical sorted name), the same leading house number, or a name-token Jaccard ≥ 0.5 together with a shared number or address-token Jaccard ≥ 0.3. Nothing in the trimming rule is learned.
+The union is scored with a transparent heuristic `h = max(cos_joint, cos_jskel, cos_fullskel) + 0.25·cos_name` and trimmed to the top-4 by `h` plus any candidate within the top-40 that has an identical normalised (or sorted) name, the same leading house number, or a name-token Jaccard ≥ 0.5 together with a shared number or address-token Jaccard ≥ 0.3. A second pass (`blocking_extra.py`) handles the ~10% of records with an empty address or a single-token name: a character-trigram TF-IDF index over space-less Source-1 names returns up to 10 extra candidates (cosine ≥ 0.3). Nothing in blocking is learned.
 
-- **Blocking keys used:** joint name+address TF-IDF cosine (uni+bigrams), phonetic-skeleton TF-IDF, name-only TF-IDF, exact-name / same-house-number / token-overlap rules.
-- **Candidate pairs generated:** training replica 51.8M pairs for 5.16M records (10.0 per record, 46.9 per Source-1 entity, reduction ratio 99.9991%). Test: see Appendix B.
-- **How we ensured true matches were not lost:** recall was measured on a 50% replica of the training world (same density of entities and distractors). Pair recall of the final candidate set is 98.38% (India 97.91%, US 98.70%); 96.5% of true matches are the heuristic's rank-1 candidate. The remaining misses are dominated by empty-address records with generic names (inherently ambiguous) and heavily truncated addresses.
+- **Blocking keys used:** joint name+address TF-IDF cosine (uni+bigrams), phonetic-skeleton TF-IDF, name-only TF-IDF, character-trigram name TF-IDF for hard records, exact-name / same-house-number / token-overlap rules.
+- **Candidate pairs generated:** full training set 120.0M pairs incl. the extra pass (India 46.9M, 53.1 per entity; US 72.7M, 54.9 per entity); test 111.0M pairs (see Appendix B).
+- **How we ensured true matches were not lost:** recall measured on the full training set: 98.06% (India) and 98.98% (US) of true pairs are retained; 96.5% of retained true matches are the heuristic's rank-1 candidate. Remaining misses are dominated by empty-address records with generic names and heavily truncated addresses.
 
-Blocking confusion matrix on the training replica:
+Blocking confusion matrix (training replica, main pass only; the full-set numbers above include the extra pass):
 
 ```
 Source-1 entities: 1,103,410   Source-2/3 targets: 5,161,055
@@ -74,43 +74,44 @@ Recall 98.38% | Precision 7.26% | Reduction Ratio 99.9991% | Specificity 99.9992
 
 ## 4. Matching Model
 
-**Features used (66, stage 1):**
-- Name features: token Jaccard/overlap/first-token equality on `name_core` and `name_sig`; rapidfuzz `ratio`, `token_sort_ratio`, `token_set_ratio`, `partial_ratio` on the core name, `ratio` on the full name and on the space-less name, Levenshtein distance (raw and length-normalised), phonetic-skeleton `ratio`/`token_set_ratio`, exact-equality flags (core, sorted, signature), legal-form agreement, non-Latin flag, lengths.
-- Address features: token Jaccard/overlap on `addr_alpha`, number-set Jaccard and first-number agreement, `ratio`/`token_sort`/`token_set`/`partial` on the address, number-string similarity, state agreement (same / different / unknown), empty-address flags, lengths.
-- Other: the four blocker cosines, heuristic score, heuristic rank and gap to the best candidate, source flag (S2 vs S3).
+**Stage-1 features (80):**
+- Name: token Jaccard/overlap/first-token equality on `name_core` and `name_sig`; rapidfuzz `ratio`, `token_sort_ratio`, `token_set_ratio`, `partial_ratio`; full-name and space-less-name ratios; Levenshtein distance (raw and normalised); phonetic-skeleton similarities; exact-equality flags; legal-form agreement; non-Latin flag; lengths; how many Source-1 entities share the candidate's name / signature.
+- Address: token Jaccard/overlap on `addr_alpha`; number-set Jaccard; first-number agreement, digit Levenshtein, prefix/suffix relation, absolute offset, offset parity and ratio (decoy signature); address ratios (full, token-sort, token-set, partial); state agreement; empty flags; how many Source-1 entities share the candidate's address (co-location).
+- Other: the four blocker cosines, heuristic score, tie-aware heuristic rank, gap to the best candidate, tie count, candidate count, extra-pass flag, source flag (S2 vs S3).
 
-**Context features (stage 2, 16 + 20 raw):** stage-1 probability and logit; for the same Source-2/3 record: max probability, ratio to max, rank, second-best, gap, candidate count; for the same Source-1 entity: number of other records that already claim it as their best match (total, from S2, from S3), number of strong candidates, mean probability of the other candidates, candidate count.
+**Stage-2 context features (31 + 25 carried over):** stage-1 probability and logit; for the same record: max probability, ratio to max, rank, second-best, gap, tie count, number of strong candidates, number of same-name candidates, name-similarity gap and rank versus the other candidates (decisive at shared addresses); for the same Source-1 entity: records already claiming it (total / S2 / S3), strong candidates, mean probability of the others, and how many of its confident records agree or disagree with its house number (sibling consistency).
 
-**Model type:** two LightGBM binary classifiers (255 leaves, lr 0.05, early stopping; ~700 and ~N trees) trained on disjoint Source-1 entity folds so that stage-2 never sees in-sample stage-1 probabilities. A record is assigned to its most probable entity only (one-to-one on the Source-2/3 side).
+**Model type:** LightGBM binary classifiers (255 leaves, learning rate 0.05, early stopping, up to 2,500 trees). Entity folds: stage 1 on folds 0–3 (7.2M sampled pairs, 1.8M positives); two cross-fitted stage-1 models (folds 0–1 and 2–3) score each other's folds so that stage-2 context is always out-of-sample; context features are computed over the complete candidate group of every record, exactly as at inference; stage 2 on folds 4–5 with early stopping on fold 6; validation on folds 7–9 (662,061 entities, never used for fitting). MIT-licensed, a few tens of MB.
 
-**Threshold selection method:** per Source-1 entity, the accepted subset of candidates is the prefix (in decreasing probability) that maximises the expected F0.5 under independence, computed exactly by dynamic programming; this is compared against fixed thresholds on the validation folds and the best rule is stored in `models/config.json`.
+**Threshold selection method:** each record is first assigned to its most probable entity (one-to-one). Per entity, the accepted subset is the prefix (by decreasing probability) that maximises the expected F0.5 under independence, computed exactly by dynamic programming over the Poisson-binomial distribution of true matches (an empty prediction is worth P(no true match)). This beat every fixed threshold on validation (0.9842 vs. 0.9839 at the best threshold 0.7).
 
 ---
 
 ## 5. Results & Error Analysis
 
-- **Public leaderboard:** v2 scored 0.9655. The gap to the replica estimate below is explained by the replica's construction: distractors are perturbed copies of Source-1 entities (same street, house number shifted by a small, usually odd, offset of 3–21; in training 63% of hard negatives differ by 3–21 while only 15% of true matches do), so sampling entities and distractors independently halves the hard-negative density per kept entity and over-estimates precision. The final models are therefore trained and validated on the full training set at true density (`train_full.py`), with explicit house-number offset features (absolute difference, parity, ratio). A second source of optimism was removed at the same time: the stage-2 competition features are now computed over the *complete* candidate group of every record (as at inference time) using cross-fitted stage-1 scores, instead of over the subset of candidates belonging to the training folds.
-- **Replica validation:** v3 **0.9842** (India 0.9828, US 0.9851; pair precision 99.52%, recall 96.34%), v2 **0.9824** on 331,029 held-out Source-1 entities of the training replica (entity folds 7-9, never used for fitting or early stopping); India 0.9804, US 0.9838. Pair-level: precision 99.52%, recall 95.85%; singleton accuracy 97.7%. Pairwise AUC 0.9946 (stage 1) → 0.9960 (stage 2), average precision 0.9992. Decision rules compared on the same entities (v2): fixed thresholds 0.3/0.5/0.7/0.8 give 0.9758/0.9807/0.9821/0.9818; the expected-F0.5 rule gives 0.9824; without the one-to-one assignment 0.9806. The v1 models (without name-frequency, tie and house-number-digit features) scored 0.9803. The stage-2 probabilities are calibrated (observed match rate 0.55 in the 0.5–0.6 bin, 0.85 in the 0.8–0.9 bin, 0.9975 above 0.9); isotonic re-calibration and power transforms did not improve the decision.
+- **F_0.5 Score (macro), held-out, full density:** **0.9842** (v5; India 0.9822, US 0.9855; pair precision 99.60%, recall 96.15%; singleton accuracy 97.8%; pair AUC 0.9950 → 0.9971 after stage 2). Earlier versions on the same protocol: v4 0.9839.
+- **Public leaderboard:** v2 0.9655. The held-out validation of the same approach is ~0.98, so the test set behaves differently from the training distribution; see the diagnostics in Appendix B.
 
-Loss attribution (1 − F0.5 summed over entities, share of the total 0.0197 macro loss):
+Loss attribution at full density (v4, macro loss 0.0161):
 
 | cause | entities | share of loss |
 | --- | --- | --- |
-| true match retained by blocking but rejected by the model | 29,068 | 46% |
-| true match missed by blocking | 15,387 | 23% |
-| false positive on a matched entity | 4,904 | 17% |
-| false positive on a singleton (scores 0) | 517 | 8% |
-| both FP and FN | 1,087 | 5% |
-| perfect | 280,066 | — |
+| entity found only partly (some records missed) | 77,038 | 57% |
+| entity with records but nothing predicted | 1,823 | 17% |
+| false positive on a matched entity | 6,531 | 14% |
+| false positive on a singleton (scores 0) | 792 | 7% |
+| both FP and FN | 1,353 | 4% |
 
-- **Common false positives (wrong merges):** (i) a record with an empty (or city-only) address whose name is shared by several Source-1 entities in different places; 62% of FPs are distractors with a colliding name, 38% are records assigned to the wrong same-name entity. The match rate of an exact-name, empty-address pair falls from 74% when the name is unique in Source 1 to 3.5% when ≥11 entities share it, so we added the Source-1 name-frequency and tie-count features in v2. (ii) house-number perturbations on otherwise identical addresses ("1831" vs "1835 Edgewater Drive") where the name is also slightly different, which are indistinguishable from the noise applied to true matches.
-- **Common false negatives (missed matches):** (i) empty-address records with a generic name (46% of the model's misses have an empty address); (ii) true matches whose house number was truncated or altered *and* whose name carries a typo ("legacy lfmdhn inc | 61 chandler lane" vs "legacy land inc | 1061 chandler lane"); (iii) blocking misses are 60% empty-address records with a typo in the name or a domain-style concatenated name ("coraliestextiles"), which word-level indexes cannot retrieve — addressed by the optional character-trigram pass (`blocking_extra.py`).
+Of the missed true pairs that reached the matcher, 54% have an empty address (mostly several Source-1 entities share the name), 25% have a different house number (probability ≈ 0.43, below the ≈ 0.75 needed by the F0.5-optimal rule when the entity already has confident matches), 9% are confident name-and-number agreements the model still doubts, 8% are DBA/trade-name records.
+
+- **Common false positives (wrong merges):** decoys with a filler word added and a house number shifted by 3–21 when the true siblings are few; empty-address records assigned to one of several same-name entities.
+- **Common false negatives (missed matches):** empty-address records with common names; true records whose house number was altered and whose name also carries a typo; records lost to a same-name entity.
 
 ---
 
 ## 6. Conclusion
 
-_[filled at the end]_
+A blocking + two-stage gradient-boosting pipeline with language-agnostic normalisation, a learned transliteration dictionary and decoy-aware features resolves 12M test records on an 8 GB laptop in about four hours end to end, with a held-out macro F0.5 of 0.984 at the true training density. The main lessons: validate at true density with complete candidate groups (otherwise the estimate is optimistic), treat the house number as the decoy discriminator, and let an exact expected-F0.5 rule — not a fixed threshold — decide what to emit.
 
 ---
 
@@ -118,8 +119,19 @@ _[filled at the end]_
 
 ### A. Code Artefacts
 
-`code/business_entity_resolution/src/`: `normalize.py`, `translit.py`, `preprocess.py`, `make_train_subset.py`, `blocking.py`, `blocking_report.py`, `features.py`, `pipeline_core.py`, `train.py`, `predict.py`; `models/` holds the two LightGBM boosters and `config.json`. `README.md` lists the exact commands (data → transliteration dictionary → normalisation → blocking → training → prediction → validation).
+`code/business_entity_resolution/src/`: `normalize.py`, `translit.py` (+ `translit_dict.json`), `preprocess.py`, `blocking.py`, `blocking_extra.py`, `blocking_report.py`, `features.py`, `pipeline_core.py`, `train.py` (helpers), `train_full.py` (training + validation), `predict.py` (inference, writes both files); `make_train_subset.py` (replica used in early versions). `models/` holds the two LightGBM boosters and `config.json` with the decision rule and validation results. `README.md` lists the exact commands.
 
 ### B. Additional Results
 
-_[test-set candidate statistics, per-country validation scores]_
+Test-set run (v5 models):
+
+| | France | India | US | all |
+| --- | --- | --- | --- | --- |
+| Source-1 entities | 259,452 | 809,986 | 663,106 | 1,732,544 |
+| candidate pairs (per entity) | 18.8M (72.6) | 51.4M (63.4) | 40.7M (61.5) | 111.0M (64.1) |
+| accepted matches per entity | 3.46 | 3.35 | 3.38 | 3.38 |
+| entities predicted empty | | | | 5.61% |
+
+Reduction ratio on test: 1 − 110,968,547 / (1,732,544 × 9,969,589) = 99.99936%.
+
+Label-free shift check: re-estimating the match prior among each record's top candidate with the EM procedure of Saerens et al. (which reproduces the training priors exactly) gives 0.861 for India on test versus 0.860 in training (no shift) but 0.798 for France versus 0.857, i.e. France has proportionally more non-matching top candidates than the training countries. French Source-1 entities also share addresses far more often (11.8% vs 4–5%). Both point at France as the main source of the gap between held-out validation and the public leaderboard; France has no training labels, so no France-specific rule was tuned.

@@ -87,7 +87,6 @@ def csr_to_frame(C: sp.csr_matrix, col: str, q_offset: int) -> pl.DataFrame:
 def run_country(country: str, s1: pl.DataFrame, qs: pl.DataFrame, out_dir: str, keep: int, chunk: int, threads: int, max_rank: int = 40):
     t0 = time.time()
     s1 = build_docs(s1)
-    qs = build_docs(qs)
     s1_ids = s1["entity_id"].to_numpy()
     q_ids = qs["entity_id"].to_numpy()
     blockers = {}
@@ -96,11 +95,12 @@ def run_country(country: str, s1: pl.DataFrame, qs: pl.DataFrame, out_dir: str, 
     print(f"[{country}] S1={len(s1_ids)} queries={len(q_ids)} indexes built in {time.time()-t0:.0f}s", flush=True)
     side_cols = ["name_core", "name_sorted", "addr_first_num", "addr_nums", "addr_alpha"]
     s1_side = s1.select(side_cols).with_row_index("s1").with_columns(pl.col("s1").cast(pl.Int64)).rename({c: c + "_a" for c in side_cols})
-    q_side = qs.select(side_cols).with_row_index("q").with_columns(pl.col("q").cast(pl.Int64)).rename({c: c + "_b" for c in side_cols})
     n_out = 0
     for ci, start in enumerate(range(0, len(q_ids), chunk)):
         tc = time.time()
-        sub = qs.slice(start, chunk)
+        sub = build_docs(qs.slice(start, chunk))   # documents are built per chunk to bound memory
+        q_side = (sub.select(side_cols).with_row_index("q").with_columns((pl.col("q").cast(pl.Int64) + start))
+                  .rename({c: c + "_b" for c in side_cols}))
         frames = []
         for out_col, (bl, doc_col) in blockers.items():
             C = bl.query(sub[doc_col].to_list())
@@ -159,15 +159,19 @@ def main():
     out_dir = os.path.join(a.work_dir, "cands", a.split)
     os.makedirs(out_dir, exist_ok=True)
     cols = ["entity_id", "country", "name_core", "name_sorted", "addr_full", "addr_alpha", "addr_nums", "addr_first_num"]
-    s1 = pl.read_parquet(os.path.join(nd, f"{a.split}_s1.parquet"), columns=cols)
-    qs = pl.concat([pl.read_parquet(os.path.join(nd, f"{a.split}_s{i}.parquet"), columns=cols) for i in (2, 3)])
-    if a.query_frac < 1.0:
-        qs = qs.sample(fraction=a.query_frac, seed=0)
-    countries = a.countries.split(",") if a.countries else sorted(s1["country"].unique().to_list())
+    countries = a.countries.split(",") if a.countries else sorted(
+        pl.scan_parquet(os.path.join(nd, f"{a.split}_s1.parquet")).select("country").unique().collect()["country"].to_list())
     for c in countries:
         for f in glob.glob(os.path.join(out_dir, f"{c}_*.parquet")):
             os.remove(f)
-        run_country(c, s1.filter(pl.col("country") == c), qs.filter(pl.col("country") == c), out_dir, a.keep, a.chunk, a.threads, a.max_rank)
+        # one country at a time, read with a filter so that only its rows are in memory
+        s1 = pl.scan_parquet(os.path.join(nd, f"{a.split}_s1.parquet")).filter(pl.col("country") == c).select(cols).collect()
+        qs = pl.concat([pl.scan_parquet(os.path.join(nd, f"{a.split}_s{i}.parquet")).filter(pl.col("country") == c)
+                        .select(cols).collect() for i in (2, 3)])
+        if a.query_frac < 1.0:
+            qs = qs.sample(fraction=a.query_frac, seed=0)
+        run_country(c, s1, qs, out_dir, a.keep, a.chunk, a.threads, a.max_rank)
+        del s1, qs
 
 
 if __name__ == "__main__":

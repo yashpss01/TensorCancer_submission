@@ -51,36 +51,47 @@ def main():
                        .select("country").unique().collect()["country"].to_list())
     print("countries", countries, flush=True)
 
-    # ---------------- pass 1: stage-1 training sample per country ----------------
-    Xs, ys, Xes, yes = [], [], [], []
+    # ---------------- pass 1: stage-1 training samples per country ----------------
+    # Two disjoint samples (entity folds {0,1} and {2,3}) so that stage-1 scores used as
+    # *context* for the stage-2 model can be cross-fitted (never in-sample).
+    XA, yA, XB, yB, Xes, yes = [], [], [], [], [], []
+    half = a.s1_pos_per_country // 2
     for ctry in countries:
         s1, qs = load_country(a.work_dir, a.split, ctry)
         c = load_cands(a.work_dir, a.split, s1, qs, country=ctry)
         c = add_labels(c, a.work_dir, s1, qs)
         c = c.with_columns(pl.Series("fold", fold_of(c["a"].to_numpy()).astype(np.int8)))
-        tr = c.filter(pl.col("fold") <= 3)
-        pos = tr.filter(pl.col("label") == 1)
-        neg = tr.filter(pl.col("label") == 0)
-        n_pos = min(pos.shape[0], a.s1_pos_per_country)
-        pos = pos.sample(n=n_pos, seed=1)
-        neg = neg.sample(n=min(neg.shape[0], int(n_pos * a.neg_ratio)), seed=2)
-        samp = pl.concat([pos, neg])
-        df = featurize(samp, s1, qs, a.workers)
-        Xs.append(stage1_matrix(df)); ys.append(df["label"].to_numpy())
+        for grp, folds, Xl, yl in (("A", [0, 1], XA, yA), ("B", [2, 3], XB, yB)):
+            tr = c.filter(pl.col("fold").is_in(folds))
+            pos = tr.filter(pl.col("label") == 1)
+            neg = tr.filter(pl.col("label") == 0)
+            n_pos = min(pos.shape[0], half)
+            pos = pos.sample(n=n_pos, seed=1)
+            neg = neg.sample(n=min(neg.shape[0], int(n_pos * a.neg_ratio)), seed=2)
+            samp = pl.concat([pos, neg])
+            df = featurize(samp, s1, qs, a.workers)
+            Xl.append(stage1_matrix(df)); yl.append(df["label"].to_numpy())
+            print(f"[{ctry}] stage-1 sample {grp}: {samp.shape[0]} (pos {n_pos}), {time.time()-t0:.0f}s", flush=True)
+            del tr, pos, neg, samp, df
         f4 = c.filter(pl.col("fold") == 4)
         es = f4.sample(n=min(300_000, f4.shape[0]), seed=4)
         dfe = featurize(es, s1, qs, a.workers)
         Xes.append(stage1_matrix(dfe)); yes.append(dfe["label"].to_numpy())
-        print(f"[{ctry}] stage-1 sample {samp.shape[0]} (pos {n_pos}) ready, {time.time()-t0:.0f}s", flush=True)
-        del c, tr, pos, neg, samp, df, dfe, f4, es, s1, qs
+        del c, dfe, f4, es, s1, qs
         gc.collect()
-    X = np.concatenate(Xs); y = np.concatenate(ys); Xe = np.concatenate(Xes); ye = np.concatenate(yes)
-    del Xs, ys, Xes, yes
+    XA = np.concatenate(XA); yA = np.concatenate(yA); XB = np.concatenate(XB); yB = np.concatenate(yB)
+    Xe = np.concatenate(Xes); ye = np.concatenate(yes)
+    del Xes, yes
+    mA = train_lgb(XA, yA, Xe, ye)          # scores folds 2-3 (out of sample)
+    mB = train_lgb(XB, yB, Xe, ye)          # scores folds 0-1 (out of sample)
+    X = np.concatenate([XA, XB]); y = np.concatenate([yA, yB])
+    del XA, XB, yA, yB
     print("stage-1 matrix", X.shape, flush=True)
-    m1 = train_lgb(X, y, Xe, ye)
+    m1 = train_lgb(X, y, Xe, ye)            # final model: scores folds 4-9 here and everything at test time
     m1.save_model(os.path.join(a.models_dir, "stage1.txt"))
     imp = sorted(zip(FEATURE_COLS, m1.feature_importance("gain")), key=lambda x: -x[1])
-    print("stage-1 best iter", m1.best_iteration, "top features:", [(k, int(v)) for k, v in imp[:25]], flush=True)
+    print("stage-1 best iter", m1.best_iteration, "(A", mA.best_iteration, "B", mB.best_iteration, ") top features:",
+          [(k, int(v)) for k, v in imp[:25]], flush=True)
     del X, y, Xe, ye
     gc.collect()
 
@@ -91,9 +102,19 @@ def main():
         s1, qs = load_country(a.work_dir, a.split, ctry)
         c = load_cands(a.work_dir, a.split, s1, qs, country=ctry)
         c = add_labels(c, a.work_dir, s1, qs)
-        c = c.with_columns(pl.Series("fold", fold_of(c["a"].to_numpy()).astype(np.int8))).filter(pl.col("fold") >= 4)
-        light = score_stage1_chunked(c, s1, qs, m1, chunk=1_000_000, workers=a.workers, extra_cols=("fold",))
+        c = c.with_columns(pl.Series("fold", fold_of(c["a"].to_numpy()).astype(np.int8)))
+        parts = []
+        for folds, model in (([0, 1], mB), ([2, 3], mA), ([4, 5, 6, 7, 8, 9], m1)):
+            sub = c.filter(pl.col("fold").is_in(folds))
+            if sub.shape[0]:
+                parts.append(score_stage1_chunked(sub, s1, qs, model, chunk=1_000_000, workers=a.workers,
+                                                  extra_cols=("fold",)))
+            del sub
         del c
+        light = pl.concat(parts); del parts
+        # competition features over the COMPLETE candidate groups (as at test time), then keep
+        # only the rows of entities used for stage 2 / validation
+        light = add_context(light).filter(pl.col("fold") >= 4)
         light = light.with_columns((pl.col("a") + off_a).alias("a"), (pl.col("b") + off_b).alias("b"))
         light.write_parquet(os.path.join(tmp, f"light_{ctry}.parquet"))
         lights.append(light)
@@ -111,7 +132,6 @@ def main():
     truth = pl.concat(truths); del truths
     all_a = np.concatenate(all_as)
     by = pl.concat(bys).with_columns(pl.col("a").cast(pl.Int32))
-    light = add_context(light)
     print("context features ready", light.shape, f"{time.time()-t0:.0f}s", flush=True)
 
     # ---------------- stage 2 ----------------
@@ -135,8 +155,7 @@ def main():
     loc = np.concatenate([np.arange(len(x), dtype=np.int64) for x in all_as])
     fold_all = fold_of(loc)
     va_a = all_a[fold_all >= 7]
-    t_loc = truth["a"].to_numpy() - np.searchsorted(np.cumsum([0] + [len(x) for x in all_as])[:-1], truth["a"].to_numpy(), side="right").astype(np.int64) * 0
-    # simpler: map offset index -> local index via lookup
+    # map offset index -> local index (folds are defined on per-country local indices)
     lookup = np.empty(len(all_a), dtype=np.int64); lookup[all_a] = loc
     truth_va = truth.filter(pl.Series(fold_of(lookup[truth["a"].to_numpy()]) >= 7))
     from sklearn.metrics import roc_auc_score, average_precision_score

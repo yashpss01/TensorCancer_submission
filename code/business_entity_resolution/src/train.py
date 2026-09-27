@@ -32,7 +32,7 @@ def fold_of(a: np.ndarray) -> np.ndarray:
     return ((a.astype(np.int64) * 2654435761) % 1000003) % 10
 
 
-def train_lgb(X, y, Xv, yv, rounds=1500, params=LGB_PARAMS):
+def train_lgb(X, y, Xv, yv, rounds=2500, params=LGB_PARAMS):
     dtr = lgb.Dataset(X, y)
     dva = lgb.Dataset(Xv, yv, reference=dtr)
     m = lgb.train(params, dtr, num_boost_round=rounds, valid_sets=[dva],

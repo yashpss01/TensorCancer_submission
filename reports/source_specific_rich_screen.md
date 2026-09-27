@@ -21,9 +21,11 @@ model on the training cohort; neither test's labels selected a threshold.
 | v2 → v1 | Global rich | 98.7959% | 98.6375% | 98.9035% | 33,512 / 133 / 959 |
 | v2 → v1 | Separate S2/S3 | 98.7014% | 98.5914% | 98.7761% | 33,472 / 134 / 999 |
 
-Source-specific fitting offered no repeatable overall or India gain. The
-second direction lost 0.0945 overall F0.5 percentage points, primarily by
-rejecting more true candidates. **Reject this model split.** The packaged
+At the inherited global thresholds, source-specific fitting offered no
+repeatable overall or India gain. The second direction lost 0.0945 overall
+F0.5 percentage points, primarily by rejecting more true candidates. This
+screen does not rule out source-specific calibration with thresholds selected
+on separate training folds. **Do not promote this tested split.** The packaged
 matcher and the previously confirmed 98.7707% reduced-pool result stay
 unchanged. Complete country counts and candidate-pair counts are in
 [source_specific_rich_screen.json](source_specific_rich_screen.json).

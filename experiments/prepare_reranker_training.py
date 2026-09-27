@@ -21,10 +21,18 @@ def read(path):
         return list(csv.DictReader(stream, delimiter="\t"))
 
 
+def serialize(name, address, country, style):
+    if style == "fields":
+        return (f"[COL] name [VAL] {name} [COL] address [VAL] {address} "
+                f"[COL] country [VAL] {country}")
+    return f"Business name: {name}. Address: {address}. Country: {country}."
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--cohort", type=pathlib.Path, required=True)
     p.add_argument("--max-per-class", type=int, default=5000)
+    p.add_argument("--style", choices=("plain", "fields"), default="plain")
     p.add_argument("--output", type=pathlib.Path, required=True)
     args = p.parse_args()
     if args.max_per_class < 1 or args.output.exists():
@@ -57,13 +65,14 @@ def main():
         q = source[groups[j]]
         name, addr, country = targets[mids[j]]
         records.append({
-            "query": f"Business name: {q['business_name']}. Address: {q['business_address']}. Country: {q['country']}.",
-            "target": f"Business name: {name}. Address: {addr}. Country: {country}.",
+            "query": serialize(q["business_name"], q["business_address"], q["country"], args.style),
+            "target": serialize(name, addr, country, args.style),
             "label": int(labels[j]),
         })
     payload = {
         "scope": "balanced hard-pair training from exposed cohort only",
         "cohort": args.cohort.name,
+        "style": args.style,
         "selection": "frozen probability >=0.01, stable pair hash, up to class cap per label",
         "positive_pairs": len(positive), "negative_pairs": len(negative),
         "records": records,

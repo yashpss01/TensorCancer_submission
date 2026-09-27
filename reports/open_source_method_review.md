@@ -17,7 +17,7 @@ has been measured.
 | --- | --- | --- | --- | --- |
 | [Splink](https://moj-analytical-services.github.io/splink/): Fellegi–Sunter evidence, [term-frequency adjustments](https://moj-analytical-services.github.io/splink/topic_guides/comparisons/term-frequency.html), [business linkage example](https://moj-analytical-services.github.io/splink/demos/examples/duckdb_no_test/business_rates_match.html) | Calibrated match/non-match likelihood ratios by comparison level; rare agreements get more evidential weight | Name token IDF, global core-name frequency, fuzzy name/address features, and an XGBoost matcher already cover much of this signal | Tested a small cross-cohort likelihood-ratio comparator for joint name/address/missingness levels on the **same frozen candidates** | **Rejected comparator:** only 92.52% and 92.49% overall macro F0.5 in the two directions. This is our bounded implementation, not a benchmark of Splink itself. A whole-framework migration has no evidence yet of raising the score. |
 | [Dedupe](https://docs.dedupe.io/en/latest/how-it-works/Matching-records.html), [variable definitions](https://docs.dedupe.io/en/latest/Variable-definition.html) | Active learning prioritizes blocker/classifier disagreement; explicit missing-value indicators and field interactions | Hard-negative mining, separate missing-address specialist, and group-context features have been screened without repeatable material gain | Error-stratified annotation/quality audit **only within provided labeled training rows** could test whether a systematic representation is missing | Do not solicit or infer new test labels; re-running a generic Dedupe pipeline is not a novel experiment. |
-| [Ditto](https://github.com/megagonlabs/ditto) | Entity-matching sequence-pair training with explicit attribute serialization, domain-specific tags, and within-record augmentation | One-epoch MiniLM and a BGE relevance reranker, including top-four-layer local fine-tuning, were screened; the latter's blended F0.5 gain failed to repeat | A bounded, entity-matching-specific full-encoder training screen with name/address field markers and augmentation derived **only** from supplied training records | Most distinct untested model route. Evaluate on exposed, entity-disjoint cohorts first; do not promote from pair AUC alone. Any adopted weights need their own verified MIT/Apache-2.0 license and parameter count. |
+| [Ditto](https://github.com/megagonlabs/ditto) | Entity-matching sequence-pair training with explicit attribute serialization, domain-specific tags, and within-record augmentation | One-epoch MiniLM and a BGE relevance reranker, including top-four-layer local fine-tuning, were screened; the latter's blended F0.5 gain failed to repeat | Tested a bounded field-marked, full-encoder multilingual classifier using only supplied labels; augmentation was not added | **Rejected bounded variant:** best observed exposed v1 → v2 overall gain was only +0.0112 F0.5 points, with a paired interval crossing zero. This does not reject every Ditto recipe, but gives no reason to promote this one. |
 
 The [Splink project](https://moj-analytical-services.github.io/splink/)
 emphasizes that its likelihood model works best with multiple, reasonably
@@ -56,8 +56,15 @@ The simple conditionally independent evidence model discarded too much
 discriminative detail here; this does not establish how a fully configured
 Splink implementation would perform.
 
-The remaining distinct research option is a bounded Ditto-style
-entity-matching training recipe, rather than another generic relevance
-reranker. A newly reserved disjoint 10k cohort must remain unopened
+The field-marked, full-encoder variant used
+[Apache-2.0 multilingual DistilBERT](https://huggingface.co/distilbert/distilbert-base-multilingual-cased)
+with 135.3M trainable parameters after adding two field tokens and a
+classifier. It improved exposed overall macro F0.5 from 98.7564% to at most
+98.7675%; the paired interval crossed zero, so it was stopped before a reverse
+or fresh run. Details: [field-marked encoder screen](field_marked_encoder_screen.md).
+The remaining opportunity would require a demonstrably new source of
+high-specificity evidence, particularly for changed names and missing target
+addresses, rather than another small model-family swap. A newly reserved
+disjoint 10k cohort must remain unopened
 until a candidate rule and threshold are frozen. Neither research source
 gives a defensible promise of reaching 99.5%.

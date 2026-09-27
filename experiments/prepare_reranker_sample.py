@@ -22,6 +22,7 @@ from rich_pair_model_screen import fit, load_cohort
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "code/business_entity_resolution/src"))
 from infer import target_records  # noqa: E402
+from prepare_reranker_training import serialize  # noqa: E402
 
 
 def read_source(path):
@@ -35,6 +36,7 @@ def main():
     p.add_argument("--train", choices=("fresh_10k_v1", "fresh_10k_v2"), required=True)
     p.add_argument("--test", choices=("fresh_10k_v1", "fresh_10k_v2"), required=True)
     p.add_argument("--max-pairs", type=int, default=1000)
+    p.add_argument("--style", choices=("plain", "fields"), default="plain")
     p.add_argument("--out-dir", type=pathlib.Path, required=True)
     args = p.parse_args()
     if args.train == args.test or args.max_pairs < 0:
@@ -68,12 +70,13 @@ def main():
         q = sources[test["group"][j]]
         name, addr, country = targets[mids[j]]
         pairs.append({
-            "query": f"Business name: {q['business_name']}. Address: {q['business_address']}. Country: {q['country']}.",
-            "target": f"Business name: {name}. Address: {addr}. Country: {country}.",
+            "query": serialize(q["business_name"], q["business_address"], q["country"], args.style),
+            "target": serialize(name, addr, country, args.style),
         })
     payload = {
         "scope": "exposed development hard-pair sample; no labels in this scoring input",
         "train_cohort": args.train, "test_cohort": args.test,
+        "style": args.style,
         "selection": ("rich probability 0.05–0.95, all eligible pairs" if args.max_pairs == 0
                       else "rich probability 0.05–0.95 then stable pair-hash sample"),
         "eligible_pairs": len(eligible), "sample_pairs": len(selected),

@@ -1,0 +1,266 @@
+{
+  "scope": "two exposed 10k reduced-pool cohorts; development screen only",
+  "train": "fresh_10k_v1",
+  "test": "fresh_10k_v2",
+  "candidate_pairs": 500128,
+  "neural_scored_uncertain_pairs": 3701,
+  "selection": "rich probability 0.05\u20130.95; all eligible pairs",
+  "decision_threshold": 0.7,
+  "baseline": {
+    "overall": {
+      "s1": 10000,
+      "macro_f05": 0.9875635291279954,
+      "tp": 33770,
+      "fp": 185,
+      "fn": 790
+    },
+    "India": {
+      "s1": 4001,
+      "macro_f05": 0.9847237645925588,
+      "tp": 13531,
+      "fp": 93,
+      "fn": 398
+    },
+    "US": {
+      "s1": 5999,
+      "macro_f05": 0.9894574944399276,
+      "tp": 20239,
+      "fp": 92,
+      "fn": 392
+    }
+  },
+  "variants": {
+    "0.05": {
+      "overall": {
+        "s1": 10000,
+        "macro_f05": 0.9876751252627001,
+        "tp": 33739,
+        "fp": 175,
+        "fn": 821
+      },
+      "India": {
+        "s1": 4001,
+        "macro_f05": 0.9851788137014661,
+        "tp": 13520,
+        "fp": 87,
+        "fn": 409
+      },
+      "US": {
+        "s1": 5999,
+        "macro_f05": 0.9893400265056566,
+        "tp": 20219,
+        "fp": 88,
+        "fn": 412
+      }
+    },
+    "0.1": {
+      "overall": {
+        "s1": 10000,
+        "macro_f05": 0.9876577875363217,
+        "tp": 33713,
+        "fp": 159,
+        "fn": 847
+      },
+      "India": {
+        "s1": 4001,
+        "macro_f05": 0.9850794569998065,
+        "tp": 13506,
+        "fp": 80,
+        "fn": 423
+      },
+      "US": {
+        "s1": 5999,
+        "macro_f05": 0.9893773908829792,
+        "tp": 20207,
+        "fp": 79,
+        "fn": 424
+      }
+    },
+    "0.2": {
+      "overall": {
+        "s1": 10000,
+        "macro_f05": 0.9871379347935982,
+        "tp": 33595,
+        "fp": 120,
+        "fn": 965
+      },
+      "India": {
+        "s1": 4001,
+        "macro_f05": 0.9844155240583966,
+        "tp": 13464,
+        "fp": 63,
+        "fn": 465
+      },
+      "US": {
+        "s1": 5999,
+        "macro_f05": 0.9889536316349954,
+        "tp": 20131,
+        "fp": 57,
+        "fn": 500
+      }
+    },
+    "0.3": {
+      "overall": {
+        "s1": 10000,
+        "macro_f05": 0.9850345741226411,
+        "tp": 33297,
+        "fp": 81,
+        "fn": 1263
+      },
+      "India": {
+        "s1": 4001,
+        "macro_f05": 0.9827095022206119,
+        "tp": 13343,
+        "fp": 40,
+        "fn": 586
+      },
+      "US": {
+        "s1": 5999,
+        "macro_f05": 0.9865852680182934,
+        "tp": 19954,
+        "fp": 41,
+        "fn": 677
+      }
+    },
+    "0.5": {
+      "overall": {
+        "s1": 10000,
+        "macro_f05": 0.9848796477814808,
+        "tp": 33277,
+        "fp": 98,
+        "fn": 1283
+      },
+      "India": {
+        "s1": 4001,
+        "macro_f05": 0.982542853793779,
+        "tp": 13343,
+        "fp": 48,
+        "fn": 586
+      },
+      "US": {
+        "s1": 5999,
+        "macro_f05": 0.9864381596575927,
+        "tp": 19934,
+        "fp": 50,
+        "fn": 697
+      }
+    }
+  },
+  "paired_gains": {
+    "0.05": {
+      "overall": {
+        "gain_percentage_points": 0.01115961347045722,
+        "paired_entity_bootstrap_95_pp": [
+          -0.027120436313447543,
+          0.05274385966061336
+        ]
+      },
+      "India": {
+        "gain_percentage_points": 0.045504910890731616,
+        "paired_entity_bootstrap_95_pp": [
+          -0.016821518970134012,
+          0.13194252467210996
+        ]
+      },
+      "US": {
+        "gain_percentage_points": -0.011746793427112025,
+        "paired_entity_bootstrap_95_pp": [
+          -0.056290397966811886,
+          0.03386895023068438
+        ]
+      }
+    },
+    "0.1": {
+      "overall": {
+        "gain_percentage_points": 0.009425840832636392,
+        "paired_entity_bootstrap_95_pp": [
+          -0.04023815743292167,
+          0.059826447618293546
+        ]
+      },
+      "India": {
+        "gain_percentage_points": 0.03556924072475647,
+        "paired_entity_bootstrap_95_pp": [
+          -0.048954047368473336,
+          0.13107231744268116
+        ]
+      },
+      "US": {
+        "gain_percentage_points": -0.008010355694846935,
+        "paired_entity_bootstrap_95_pp": [
+          -0.07326993669421361,
+          0.05202230159820307
+        ]
+      }
+    },
+    "0.2": {
+      "overall": {
+        "gain_percentage_points": -0.04255943343971044,
+        "paired_entity_bootstrap_95_pp": [
+          -0.12663914998952658,
+          0.044121304013325854
+        ]
+      },
+      "India": {
+        "gain_percentage_points": -0.030824053416212624,
+        "paired_entity_bootstrap_95_pp": [
+          -0.18059400638421075,
+          0.11899062166736907
+        ]
+      },
+      "US": {
+        "gain_percentage_points": -0.0503862804932218,
+        "paired_entity_bootstrap_95_pp": [
+          -0.1540071138526696,
+          0.050811928972865864
+        ]
+      }
+    },
+    "0.3": {
+      "overall": {
+        "gain_percentage_points": -0.25289550053544013,
+        "paired_entity_bootstrap_95_pp": [
+          -0.37024693868124825,
+          -0.13844377788000325
+        ]
+      },
+      "India": {
+        "gain_percentage_points": -0.20142623719468056,
+        "paired_entity_bootstrap_95_pp": [
+          -0.4135330852616253,
+          0.014841411354976651
+        ]
+      },
+      "US": {
+        "gain_percentage_points": -0.2872226421634413,
+        "paired_entity_bootstrap_95_pp": [
+          -0.42853904577854435,
+          -0.15845325369534818
+        ]
+      }
+    },
+    "0.5": {
+      "overall": {
+        "gain_percentage_points": -0.2683881346514436,
+        "paired_entity_bootstrap_95_pp": [
+          -0.3944382519705169,
+          -0.1515533061524142
+        ]
+      },
+      "India": {
+        "gain_percentage_points": -0.21809107987797602,
+        "paired_entity_bootstrap_95_pp": [
+          -0.4353625933478677,
+          -0.002417622618891663
+        ]
+      },
+      "US": {
+        "gain_percentage_points": -0.3019334782334813,
+        "paired_entity_bootstrap_95_pp": [
+          -0.4573273358759522,
+          -0.1517660544219857
+        ]
+      }
+    }
+  }
+}

@@ -29,13 +29,15 @@ def main():
     args = p.parse_args()
     label_payload = json.loads(args.labels.read_text())
     score_payload = json.loads(args.scores.read_text())
-    if label_payload["input_sha256"] != score_payload["input_sha256"]:
+    score_input_hash = score_payload.get("input_sha256", score_payload.get("evaluation_input_sha256"))
+    if label_payload["input_sha256"] != score_input_hash:
         raise ValueError("Scores and labels belong to different samples")
     labels = np.asarray(label_payload["labels"], dtype=bool)
     rich = np.asarray(label_payload["rich_probability"], dtype=float)
     neural = np.asarray(score_payload["logits"], dtype=float)
     country = np.asarray(label_payload["country"])
-    if not len(labels) == len(rich) == len(neural) == len(country) == score_payload["sample_pairs"]:
+    scored_pairs = score_payload.get("sample_pairs", score_payload.get("evaluation_pairs"))
+    if not len(labels) == len(rich) == len(neural) == len(country) == scored_pairs:
         raise ValueError("Sample score/label lengths differ")
     result = {
         "scope": "sampled exposed-development pair discrimination only; not per-S1 macro F0.5",
@@ -44,7 +46,9 @@ def main():
         "model": score_payload["model"],
         "model_revision": score_payload["model_revision"],
         "device": score_payload["device"],
-        "scoring_seconds": score_payload["seconds"],
+        "elapsed_seconds": score_payload["seconds"],
+        "elapsed_scope": ("training and scoring" if "training_pairs" in score_payload
+                          else "scoring only"),
         "overall": metrics(labels, rich, neural),
         "countries": {name: metrics(labels[country == name], rich[country == name],
                                     neural[country == name])

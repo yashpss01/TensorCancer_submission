@@ -37,8 +37,8 @@ def main():
     p.add_argument("--max-pairs", type=int, default=1000)
     p.add_argument("--out-dir", type=pathlib.Path, required=True)
     args = p.parse_args()
-    if args.train == args.test or args.max_pairs < 1:
-        raise ValueError("Use different exposed train/test cohorts and positive sample size")
+    if args.train == args.test or args.max_pairs < 0:
+        raise ValueError("Use different exposed train/test cohorts and nonnegative sample size")
     if args.out_dir.exists() and any(args.out_dir.iterdir()):
         raise RuntimeError("Use a new empty output directory")
     started = time.monotonic()
@@ -55,8 +55,9 @@ def main():
     eligible = np.flatnonzero((rich_prob >= .05) & (rich_prob <= .95))
     ranked = sorted(eligible, key=lambda j: hashlib.sha256(
         (sids[j] + "\0" + mids[j]).encode()).digest())
-    selected = np.asarray(ranked[:args.max_pairs], dtype=np.int32)
-    if len(selected) < args.max_pairs:
+    selected = np.asarray(ranked[:args.max_pairs] if args.max_pairs else ranked,
+                          dtype=np.int32)
+    if args.max_pairs and len(selected) < args.max_pairs:
         raise ValueError("Fewer eligible pairs than requested")
     sources = read_source(test_root / "source1.tsv")
     db = sqlite3.connect(f"file:{test_root/'bounded_index/index.sqlite'}?mode=ro", uri=True)
@@ -73,7 +74,8 @@ def main():
     payload = {
         "scope": "exposed development hard-pair sample; no labels in this scoring input",
         "train_cohort": args.train, "test_cohort": args.test,
-        "selection": "rich probability 0.05–0.95 then stable pair-hash sample",
+        "selection": ("rich probability 0.05–0.95, all eligible pairs" if args.max_pairs == 0
+                      else "rich probability 0.05–0.95 then stable pair-hash sample"),
         "eligible_pairs": len(eligible), "sample_pairs": len(selected),
         "pairs": pairs,
     }
@@ -84,6 +86,7 @@ def main():
         "labels": labels.astype(int).tolist(),
         "rich_probability": rich_prob[selected].astype(float).tolist(),
         "country": test["country"][test["group"][selected]].tolist(),
+        "pair_indices": selected.astype(int).tolist(),
     }
     args.out_dir.mkdir(parents=True, exist_ok=True)
     input_path = args.out_dir / "input.json"

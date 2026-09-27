@@ -1,0 +1,41 @@
+{
+  "scope": "exposed v1/v2 training cohorts, reduced target pools; diagnostic only",
+  "cohorts": {
+    "fresh_10k_v1": {
+      "raw": {
+        "groups": 10000,
+        "candidate_pairs": 503552,
+        "mixed_groups": 0,
+        "mixed_classes": 0,
+        "mixed_true_pairs": 0,
+        "mixed_false_pairs": 0
+      },
+      "normalized": {
+        "groups": 10000,
+        "candidate_pairs": 503552,
+        "mixed_groups": 3,
+        "mixed_classes": 3,
+        "mixed_true_pairs": 3,
+        "mixed_false_pairs": 3
+      }
+    },
+    "fresh_10k_v2": {
+      "raw": {
+        "groups": 10000,
+        "candidate_pairs": 500128,
+        "mixed_groups": 0,
+        "mixed_classes": 0,
+        "mixed_true_pairs": 0,
+        "mixed_false_pairs": 0
+      },
+      "normalized": {
+        "groups": 10000,
+        "candidate_pairs": 500128,
+        "mixed_groups": 3,
+        "mixed_classes": 3,
+        "mixed_true_pairs": 3,
+        "mixed_false_pairs": 3
+      }
+    }
+  }
+}

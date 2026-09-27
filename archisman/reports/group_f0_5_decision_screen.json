@@ -1,0 +1,100 @@
+{
+  "scope": "v1/v2 exposed crossfit selection; final cohort already exposed, used only as a development diagnostic",
+  "development_fixed": {
+    "overall": {
+      "s1": 20000,
+      "macro_f05": 0.9880341136844041,
+      "tp": 67285,
+      "fp": 296,
+      "fn": 1746
+    },
+    "India": {
+      "s1": 8046,
+      "macro_f05": 0.9859442649068049,
+      "tp": 27018,
+      "fp": 137,
+      "fn": 873
+    },
+    "US": {
+      "s1": 11954,
+      "macro_f05": 0.9894407493933354,
+      "tp": 40267,
+      "fp": 159,
+      "fn": 873
+    }
+  },
+  "development_selected_rule": {
+    "odds_scale": 1.5,
+    "empty_utility_multiplier": 2.0,
+    "metrics": {
+      "overall": {
+        "s1": 20000,
+        "macro_f05": 0.987932327503691,
+        "tp": 67107,
+        "fp": 265,
+        "fn": 1924
+      },
+      "India": {
+        "s1": 8046,
+        "macro_f05": 0.9860314804117905,
+        "tp": 26966,
+        "fp": 125,
+        "fn": 925
+      },
+      "US": {
+        "s1": 11954,
+        "macro_f05": 0.9892117499314501,
+        "tp": 40141,
+        "fp": 140,
+        "fn": 999
+      }
+    }
+  },
+  "retrospective_final_fixed": {
+    "overall": {
+      "s1": 10000,
+      "macro_f05": 0.987707101909527,
+      "tp": 33952,
+      "fp": 174,
+      "fn": 878
+    },
+    "India": {
+      "s1": 4087,
+      "macro_f05": 0.9855407868296433,
+      "tp": 13727,
+      "fp": 78,
+      "fn": 411
+    },
+    "US": {
+      "s1": 5913,
+      "macro_f05": 0.9892044348592114,
+      "tp": 20225,
+      "fp": 96,
+      "fn": 467
+    }
+  },
+  "retrospective_final_selected_rule": {
+    "overall": {
+      "s1": 10000,
+      "macro_f05": 0.9876641290340318,
+      "tp": 33885,
+      "fp": 164,
+      "fn": 945
+    },
+    "India": {
+      "s1": 4087,
+      "macro_f05": 0.9856398894759976,
+      "tp": 13701,
+      "fp": 73,
+      "fn": 437
+    },
+    "US": {
+      "s1": 5913,
+      "macro_f05": 0.9890632609592283,
+      "tp": 20184,
+      "fp": 91,
+      "fn": 508
+    }
+  },
+  "seconds": 21.003173999954015
+}

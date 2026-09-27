@@ -1,0 +1,163 @@
+{
+  "scope": "three already exposed 10k training cohorts with positive-enriched reduced target pools",
+  "fixed_threshold": 0.775,
+  "directions": {
+    "fresh_10k_v1": {
+      "single_train": "fresh_10k_v2",
+      "added_train": "fresh_10k_final",
+      "single_train_pairs": 500128,
+      "pooled_train_pairs": 1008901,
+      "single_train_test_score": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9882983064895238,
+          "tp": 33610,
+          "fp": 156,
+          "fn": 861
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.9867117956553334,
+          "tp": 13519,
+          "fp": 64,
+          "fn": 443
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.989375961623747,
+          "tp": 20091,
+          "fp": 92,
+          "fn": 418
+        }
+      },
+      "pooled_train_test_score": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9884490181554083,
+          "tp": 33622,
+          "fp": 147,
+          "fn": 849
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.9871617205016601,
+          "tp": 13537,
+          "fp": 62,
+          "fn": 425
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.9893234294080381,
+          "tp": 20085,
+          "fp": 85,
+          "fn": 424
+        }
+      }
+    },
+    "fresh_10k_v2": {
+      "single_train": "fresh_10k_v1",
+      "added_train": "fresh_10k_final",
+      "single_train_pairs": 503552,
+      "pooled_train_pairs": 1012325,
+      "single_train_test_score": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9872917371101323,
+          "tp": 33657,
+          "fp": 152,
+          "fn": 903
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9843546716782837,
+          "tp": 13480,
+          "fp": 78,
+          "fn": 449
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9892505967188713,
+          "tp": 20177,
+          "fp": 74,
+          "fn": 454
+        }
+      },
+      "pooled_train_test_score": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9875365226008777,
+          "tp": 33665,
+          "fp": 151,
+          "fn": 895
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9850004382717652,
+          "tp": 13494,
+          "fp": 80,
+          "fn": 435
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9892279500722526,
+          "tp": 20171,
+          "fp": 71,
+          "fn": 460
+        }
+      }
+    },
+    "fresh_10k_final": {
+      "single_train": "fresh_10k_v1",
+      "added_train": "fresh_10k_v2",
+      "single_train_pairs": 503552,
+      "pooled_train_pairs": 1003680,
+      "single_train_test_score": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9876430895073339,
+          "tp": 33960,
+          "fp": 171,
+          "fn": 870
+        },
+        "India": {
+          "s1": 4087,
+          "macro_f05": 0.9859490279772335,
+          "tp": 13731,
+          "fp": 76,
+          "fn": 407
+        },
+        "US": {
+          "s1": 5913,
+          "macro_f05": 0.9888140060426833,
+          "tp": 20229,
+          "fp": 95,
+          "fn": 463
+        }
+      },
+      "pooled_train_test_score": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.987707101909527,
+          "tp": 33952,
+          "fp": 174,
+          "fn": 878
+        },
+        "India": {
+          "s1": 4087,
+          "macro_f05": 0.9855407868296433,
+          "tp": 13727,
+          "fp": 78,
+          "fn": 411
+        },
+        "US": {
+          "s1": 5913,
+          "macro_f05": 0.9892044348592114,
+          "tp": 20225,
+          "fp": 96,
+          "fn": 467
+        }
+      }
+    }
+  },
+  "seconds": 58.81093945913017
+}

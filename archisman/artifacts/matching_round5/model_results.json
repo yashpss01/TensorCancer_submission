@@ -1,0 +1,130 @@
+{
+  "models": {
+    "logistic": {
+      "best": {
+        "threshold": 0.7100000000000001,
+        "overall": {
+          "queries": 10000,
+          "macro_f05": 0.9648462294979823,
+          "pair_tp": 32118,
+          "pair_fp": 537,
+          "pair_fn": 2298,
+          "singleton_count": 584,
+          "singleton_correct": 558,
+          "perfect_entities": 7701
+        },
+        "countries": {
+          "India": {
+            "queries": 4018,
+            "macro_f05": 0.9581178340213751,
+            "pair_tp": 12759,
+            "pair_fp": 184,
+            "pair_fn": 1257,
+            "singleton_count": 226,
+            "singleton_correct": 218,
+            "perfect_entities": 2896
+          },
+          "US": {
+            "queries": 5982,
+            "macro_f05": 0.9693655696893911,
+            "pair_tp": 19359,
+            "pair_fp": 353,
+            "pair_fn": 1041,
+            "singleton_count": 358,
+            "singleton_correct": 340,
+            "perfect_entities": 4805
+          }
+        }
+      },
+      "model_path": "artifacts/matching_round5/logistic.joblib",
+      "model_sha256": "6ae46fb5b2c40b1945dfa03662c87fca6ff1af79d1f4ae6fb2867eea17600dc2",
+      "validation_prob_sha256": "213a03c8fda3b5ae9312983c62789591158974f41e2eaed3d920ffee77404e3c"
+    },
+    "xgboost": {
+      "best": {
+        "threshold": 0.74,
+        "overall": {
+          "queries": 10000,
+          "macro_f05": 0.979879735026112,
+          "pair_tp": 32985,
+          "pair_fp": 285,
+          "pair_fn": 1431,
+          "singleton_count": 584,
+          "singleton_correct": 574,
+          "perfect_entities": 8500
+        },
+        "countries": {
+          "India": {
+            "queries": 4018,
+            "macro_f05": 0.9749576269287226,
+            "pair_tp": 13277,
+            "pair_fp": 127,
+            "pair_fn": 739,
+            "singleton_count": 226,
+            "singleton_correct": 223,
+            "perfect_entities": 3286
+          },
+          "US": {
+            "queries": 5982,
+            "macro_f05": 0.9831858250186416,
+            "pair_tp": 19708,
+            "pair_fp": 158,
+            "pair_fn": 692,
+            "singleton_count": 358,
+            "singleton_correct": 351,
+            "perfect_entities": 5214
+          }
+        }
+      },
+      "model_path": "artifacts/matching_round5/xgboost.json",
+      "model_sha256": "0e371b97957741db44eca090c232744b44d24f2d49c4be8e1e841e7e6a0cc0d4",
+      "validation_prob_sha256": "1b169c04c0888fd8a7ebeebf4e9df84fd8146bf93e11e045d8cd9f96989cbc80",
+      "best_iteration": 697
+    }
+  },
+  "train_rows": 1488094,
+  "validation_rows": 493573,
+  "seconds": 35.42667016712949,
+  "peak_rss_bytes": 1281720320,
+  "feature_names": [
+    "country_equal",
+    "name_exact",
+    "name_core_exact",
+    "name_first_equal",
+    "name_token_count_shared",
+    "name_token_dice",
+    "name_token_containment",
+    "name_token_idf_cosine",
+    "name_token_idf_containment",
+    "name_core_count_shared",
+    "name_core_dice",
+    "name_core_containment",
+    "name_core_idf_cosine",
+    "name_char3_dice",
+    "name_core_char3_dice",
+    "name_key_bigram_dice",
+    "name_key_exact",
+    "name_length_ratio",
+    "name_core_length_ratio",
+    "name_token_count_ratio",
+    "name_has_unicode_mismatch",
+    "address_exact",
+    "address_token_count_shared",
+    "address_token_dice",
+    "address_token_containment",
+    "address_token_idf_cosine",
+    "address_token_idf_containment",
+    "address_char3_dice",
+    "address_number_count_shared",
+    "address_number_containment",
+    "address_number_conflict",
+    "address_postal_equal",
+    "address_postal_conflict",
+    "address_length_ratio",
+    "address_missing_either",
+    "address_missing_both",
+    "name_address_joint",
+    "name_or_address_max",
+    "name_address_min"
+  ]
+}

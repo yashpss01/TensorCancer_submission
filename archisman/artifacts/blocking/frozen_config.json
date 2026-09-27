@@ -1,0 +1,42 @@
+{
+  "k": 60,
+  "threshold": 0.45,
+  "address_rescue": 12,
+  "phonetic_rescue": 0,
+  "minimum": 0,
+  "rescue_empty": true,
+  "selection": "Smallest mean among selective rescue configurations with dev recall >=99.70%; amended from 99.75% before holdout to reduce candidate cost",
+  "development_metrics": {
+    "k": 60,
+    "threshold": 0.45,
+    "address_rescue": 12,
+    "phonetic_rescue": 0,
+    "queries": 7000,
+    "targets": 239788,
+    "comparison_space": 1678516000,
+    "TP": 24208,
+    "FN": 72,
+    "FP": 242412,
+    "TN": 1678249308,
+    "recall": 0.9970345963756178,
+    "fn_rate": 0.0029654036243822457,
+    "precision": 0.09079588928062411,
+    "reduction_ratio": 0.999841157308003,
+    "specificity": 0.999855577482384,
+    "candidate_f1": 0.16643520110003437,
+    "candidates": 266620,
+    "candidates_mean": 38.08857142857143,
+    "candidates_p95": 72,
+    "candidates_max": 87,
+    "oracle_macro_f05": 0.9990613937210419,
+    "entities_with_misses": 67,
+    "singletons": 395
+  },
+  "code_sha256": {
+    "blocking.py": "5df7ed7261fbb4f224fb94c993f22c4c55b906153182feada92ce7026dfbfa46",
+    "evaluate.py": "27461fa702991bdda90a4dd4c945aade4bc267d9a975c365a2756642f9f7a986",
+    "phonetic.py": "e190c3359537332442659352b1d1e4237e4c0c5362a304f2528a5ef5eba0a8af"
+  },
+  "queries_sha256": "d6ef159447a3b0ceef7e063a5b909359702d1f522316393a2b120fb078a23d96",
+  "frozen_utc": "2026-09-26T09:35:24Z"
+}

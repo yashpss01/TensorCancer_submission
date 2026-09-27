@@ -1,0 +1,41 @@
+{
+  "best": {
+    "threshold": 0.7000000000000001,
+    "overall": {
+      "queries": 10000,
+      "macro_f05": 0.9828589637290972,
+      "pair_tp": 33473,
+      "pair_fp": 277,
+      "pair_fn": 943,
+      "singleton_count": 584,
+      "singleton_correct": 576,
+      "perfect_entities": 8919
+    },
+    "countries": {
+      "India": {
+        "queries": 4018,
+        "macro_f05": 0.980817253244648,
+        "pair_tp": 13569,
+        "pair_fp": 109,
+        "pair_fn": 447,
+        "singleton_count": 226,
+        "singleton_correct": 221,
+        "perfect_entities": 3533
+      },
+      "US": {
+        "queries": 5982,
+        "macro_f05": 0.984230343322296,
+        "pair_tp": 19904,
+        "pair_fp": 168,
+        "pair_fn": 496,
+        "singleton_count": 358,
+        "singleton_correct": 355,
+        "perfect_entities": 5386
+      }
+    }
+  },
+  "best_iteration": 484,
+  "seconds": 36.302494999952614,
+  "features": 85,
+  "model": "artifacts/matching_round5/group_extra.json"
+}

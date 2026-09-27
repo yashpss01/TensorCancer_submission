@@ -1,0 +1,71 @@
+{
+  "holdout_rows": "60001–80000",
+  "target_pool": "Sealed reduced 409141-target pool",
+  "threshold": 0.74,
+  "blend_group": 0.4,
+  "blend_augmented": 0.6,
+  "development": {
+    "overall": {
+      "queries": 10000,
+      "macro_f05": 0.9836579230000698,
+      "pair_tp": 33564,
+      "pair_fp": 307,
+      "pair_fn": 852,
+      "singleton_count": 584,
+      "singleton_correct": 573,
+      "perfect_entities": 8963
+    },
+    "countries": {
+      "India": {
+        "queries": 4018,
+        "macro_f05": 0.9810845157444831,
+        "pair_tp": 13602,
+        "pair_fp": 129,
+        "pair_fn": 414,
+        "singleton_count": 226,
+        "singleton_correct": 222,
+        "perfect_entities": 3543
+      },
+      "US": {
+        "queries": 5982,
+        "macro_f05": 0.9853864335906658,
+        "pair_tp": 19962,
+        "pair_fp": 178,
+        "pair_fn": 438,
+        "singleton_count": 358,
+        "singleton_correct": 351,
+        "perfect_entities": 5420
+      }
+    }
+  },
+  "code_hashes": {
+    "code/business_entity_resolution/round5/features.py": "3dd25f0cf80b3e755b8d9882169c615848247773e94415a632f315c05be4400d",
+    "code/business_entity_resolution/round5/extra_pair.py": "9cb216ba2dc5f0c2bd58edb4e86c780717d5510d6ee1938d7d547365d4a4cf09",
+    "code/business_entity_resolution/round5/stage2.py": "254f8a480945aa960837d96df80fd217a4ecdbda0f9832a78cdfd0913d8bdc3d",
+    "code/business_entity_resolution/round5/dataset.py": "24b93552190418b93e0af3dc70facd560c8e9c449811e81b756060250d6607ad",
+    "code/business_entity_resolution/round5/train.py": "1d1dc5debb8c63d2dbef65a2e760c71ec469f4faddbbdef1a2b9e9f7cc1e5481",
+    "code/business_entity_resolution/round5/augmented_model.py": "486a3f5d77fb757f632019775c7730c0e31129d26243a16fb4ab5282cef61967",
+    "code/business_entity_resolution/round5/holdout.py": "ba4823e8868b0b6069faf98065587dbf5e6cc085da0d791803dcd4038e7a7d47",
+    "code/business_entity_resolution/round2/common.py": "d1191206db2d5d2cfb6bc4c6755fece276a69ff6a8c329cf275ae8ad11dd1efb",
+    "code/business_entity_resolution/round2/normalize.py": "f971ab83143adbeb481df808a49df04a152eca4c7f97ce9f7a5fea68e410f5a4",
+    "code/business_entity_resolution/round2/improve.py": "26c0c9ac9388a55254bdfcad5c8643c365d1e2f71d54058e0e4de602ce398ec5",
+    "code/business_entity_resolution/round2/run.py": "0ad680ef81b2f00a1acaa06b0580cf80ccacd9bcd244e0bd8bf8858694dc7abc",
+    "code/business_entity_resolution/round2/extra_index.py": "9983145ed6dd6a5c4fb2f784d44b227f7e554b399ee6d8f0ec7a13d84f943f71"
+  },
+  "model_hashes": {
+    "artifacts/matching_round5/xgboost.json": "0e371b97957741db44eca090c232744b44d24f2d49c4be8e1e841e7e6a0cc0d4",
+    "artifacts/matching_round5/group_extra.json": "ffc641566cff4963f0ecf7d51a1583159b23781898c22dbe922ecd5def21ed16",
+    "artifacts/matching_round5/augmented_0p15.json": "be560139922004cd43c63ffb835a35cbfafc5ac8e8ceb3205a4aff98b44cbd90"
+  },
+  "input_hashes": {
+    "artifacts/matching_round5/train/meta.json": "9c317cf5654e611bc1315d5986b0c089d190d10923fc9772dc34d553c3e9619a",
+    "artifacts/matching_round5/validation/meta.json": "74ef77f983de591d82806cb8a7e9bba80df3d22f48cd3a1d4b3acee5a69326df",
+    "artifacts/matching_round5/supplement/meta.json": "3a208065bb81ce63f0e52accfbb8327113623d9111b7e7298682e4043b210bf4",
+    "artifacts/matching_round5/group_extra_results.json": "17181e1b7fdb6cf4f2824d382d7f263d9372276a870137ab9d1ef639643f649b",
+    "artifacts/matching_round5/augmented_0p15_results.json": "de2759febd59359d15d55541014681a6e57214df486a4b8c97abe95c10f03df2"
+  },
+  "frozen_utc": "2026-09-26T17:31:46Z",
+  "selection": "Two development models blended at fixed 0.4/0.6 weights; all choices fixed before holdout retrieval or scoring",
+  "implementation_amendment": "Allow pre-existing holdout directory containing the frozen config during feature extraction; no model, threshold, candidate, or validation-result change.",
+  "implementation_amended_utc": "2026-09-26T17:57:21Z"
+}

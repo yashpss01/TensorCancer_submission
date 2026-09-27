@@ -1,0 +1,69 @@
+{
+ "decision": "expected",
+ "threshold": 0.5,
+ "results": {
+  "thr_0.5": {
+   "macro_f05": 0.9826430371799935,
+   "n_entities": 662061,
+   "pair_precision": 0.9915849329121482,
+   "pair_recall": 0.9685338616950413,
+   "singleton_acc": 0.979381443298969,
+   "nonsingleton_f": 0.9828353310989965,
+   "by_country": {
+    "U": 0.9839,
+    "I": 0.98077
+   }
+  },
+  "thr_0.6": {
+   "macro_f05": 0.9836048131410005,
+   "n_entities": 662061,
+   "pair_precision": 0.9938847461157387,
+   "pair_recall": 0.9658501750808879,
+   "singleton_acc": 0.9831795984807379,
+   "nonsingleton_f": 0.9836298825384858,
+   "by_country": {
+    "I": 0.98166,
+    "U": 0.9849
+   }
+  },
+  "thr_0.7": {
+   "macro_f05": 0.9839028164667687,
+   "n_entities": 662061,
+   "pair_precision": 0.9954677051447318,
+   "pair_recall": 0.9631123959537056,
+   "singleton_acc": 0.9864894194248508,
+   "nonsingleton_f": 0.9837503180142152,
+   "by_country": {
+    "U": 0.98528,
+    "I": 0.98184
+   }
+  },
+  "thr_0.8": {
+   "macro_f05": 0.9836048446428935,
+   "n_entities": 662061,
+   "pair_precision": 0.9967541884655405,
+   "pair_recall": 0.9594327963778956,
+   "singleton_acc": 0.9900162778079219,
+   "nonsingleton_f": 0.9832268455250692,
+   "by_country": {
+    "U": 0.985,
+    "I": 0.98151
+   }
+  },
+  "expected": {
+   "macro_f05": 0.9841784339680182,
+   "n_entities": 662061,
+   "pair_precision": 0.9960018346012115,
+   "pair_recall": 0.9615236464984477,
+   "singleton_acc": 0.9780792186652197,
+   "nonsingleton_f": 0.984538025645033,
+   "by_country": {
+    "I": 0.98221,
+    "U": 0.98549
+   }
+  }
+ },
+ "stage1_iter": 1147,
+ "stage2_iter": 477,
+ "trained_on": "train (full density)"
+}

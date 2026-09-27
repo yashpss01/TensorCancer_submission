@@ -1,0 +1,8 @@
+work/
+__pycache__/
+*.pyc
+.DS_Store
+output/candidate_pairs.tsv
+output_v1/
+output_v2/
+*.zip

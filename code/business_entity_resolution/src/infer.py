@@ -122,7 +122,7 @@ def load_models(model_dir):
     return first,group,augmented,token_weights,char_weights
 
 
-def match_batch(queries,candidate_lists,db,models):
+def predict_batch_probabilities(queries,candidate_lists,db,models):
     first,group,augmented,(nw,aw,default),(cn,ca,cdefault)=models
     assert len(queries)==len(candidate_lists)
     all_ids=list(itertools.chain.from_iterable(candidate_lists))
@@ -137,7 +137,7 @@ def match_batch(queries,candidate_lists,db,models):
             E.append(extra_vector(qr,tr,cn,ca,cdefault))
             current.append(tr)
         reps.append(current);offsets.append(len(X))
-    if not X:return [[] for _ in queries]
+    if not X:return [np.empty(0,dtype='float32') for _ in queries]
     X=np.asarray(X,dtype='float32');E=np.asarray(E,dtype='float32')
     assert X.shape[1]==len(FEATURE_NAMES) and E.shape[1]==len(EXTRA_NAMES)
     pair=np.concatenate((X,E),axis=1)
@@ -147,7 +147,14 @@ def match_batch(queries,candidate_lists,db,models):
     group_input=np.concatenate((pair,A[:,1:]),axis=1)
     prob=(.4*group.predict_proba(group_input)[:,1]+.6*augmented.predict_proba(pair)[:,1]).astype('float32')
     assert np.isfinite(prob).all()
-    return [[mid for mid,p in zip(mids,prob[offsets[i]:offsets[i+1]]) if p>=.74] for i,mids in enumerate(candidate_lists)]
+    return [prob[offsets[i]:offsets[i+1]] for i in range(len(queries))]
+
+
+def match_batch(queries,candidate_lists,db,models):
+    """Keep the frozen decision rule separate from reusable pair scoring."""
+    probabilities=predict_batch_probabilities(queries,candidate_lists,db,models)
+    return [[mid for mid,p in zip(mids,probs) if p>=.74]
+            for mids,probs in zip(candidate_lists,probabilities)]
 
 
 def run(source1,index_dir,output_dir,model_dir,workers,batch_size,limit,start_row=0,stop_row=None):

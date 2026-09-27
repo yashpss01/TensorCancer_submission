@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-This branch records a text-only, multi-route candidate blocker followed by a blended XGBoost matcher. The packaged default matcher scored **98.4117% per-Source-1 macro F0.5** on a 20,000-entity reduced-pool holdout. A separately frozen rich research matcher later scored **98.7707%** on a disjoint 10,000-entity reduced-pool confirmation batch, improving the paired baseline of 98.3538%. This improved matcher is not yet the packaged submission inference. The requested 99.5% target was **not met**; there is no Portal score or measured France score.
+This branch records a text-only, multi-route candidate blocker followed by a blended XGBoost matcher. The packaged default matcher scored **98.4117% per-Source-1 macro F0.5** on a 20,000-entity reduced-pool holdout. A separately frozen rich matcher later scored **98.7707%** on a disjoint 10,000-entity reduced-pool confirmation batch, improving the paired baseline of 98.3538%. The rich method has an optional, self-contained bounded rescore command; the default `infer.py run` still writes original-matcher decisions. The requested 99.5% target was **not met**; there is no Portal score or measured France score.
 
 ## 2. Methodology
 
@@ -43,7 +43,7 @@ The newer rich-model confirmation used 477,164 targets and the **same 508,773 ca
 
 ## 6. Conclusion
 
-The 99.5% macro-F0.5 target remains unmet. The rich research matcher confirmed a gain but has not been inserted into the self-contained test inference command. Follow-on cross-source anchor evidence produced only a small development gain and needs another frozen disjoint confirmation before any quality claim. A self-contained inference entry point for the original matcher is included; full test inference, France accuracy, and the Portal score have not been measured.
+The 99.5% macro-F0.5 target remains unmet. The rich matcher confirmed a gain and has an optional self-contained bounded-shard rescore command, independently replayed to byte-identical TSV output on the confirmation batch. It does not change the original `infer.py run` output. Follow-on cross-source anchor evidence produced only a small development gain and needs another frozen disjoint confirmation before any quality claim. Full test inference, France accuracy, and the Portal score have not been measured.
 
 ## Appendix
 
@@ -54,7 +54,7 @@ The 99.5% macro-F0.5 target remains unmet. The rich research matcher confirmed a
 - `code/business_entity_resolution/round2/` through `round4/`: blocker improvements and independent validation rounds.
 - `code/business_entity_resolution/round5/`: pair features, matcher training, group features, and frozen holdout evaluation.
 - `artifacts/matching_round5/`: frozen model weights and compact evidence files. Raw challenge data, multi-gigabyte intermediate arrays, and the reduced SQLite index are not in Git.
-- `experiments/checkpoints/rich_pair_v1v2/` and `reports/rich_pair_fresh_confirmation.md`: separate, frozen research matcher and its disjoint reduced-pool confirmation. They are not dependencies of the packaged default inference command.
+- `code/business_entity_resolution/models/rich_pair_v1v2/` and `src/rich_infer.py`: optional packaged rich-model checkpoint and bounded rescore command; `reports/rich_pair_fresh_confirmation.md` records its disjoint reduced-pool confirmation. They are not dependencies of the packaged default inference command.
 - `reports/`: protocols, blocker evaluations, and the final matcher holdout review.
 
 ### B. Delivery Boundary

@@ -1,15 +1,15 @@
 # Entity-resolution experiment ledger
 
-Last updated: 2026-09-27 05:15 IST. This is a working checkpoint, not a submission claim.
+Last updated: 2026-09-27. This is a working checkpoint, not a submission claim.
 
 ## Guardrails
 
 - Goal: honestly measured per-S1 macro F0.5 at least 99.5%; do not claim the goal from a reduced target pool alone.
-- Keep each selection, development, fresh validation, and final confirmation cohort distinct. `work/fresh_10k_v1` is exposed; `work/fresh_10k_v2` and `work/fresh_10k_final` remain sealed.
+- Keep each selection, development, fresh validation, and final confirmation cohort distinct. `work/fresh_10k_v1` and `work/fresh_10k_v2` are now exposed; `work/fresh_10k_final` remains sealed.
 - The 442,904-target v1 pool is positive-enriched and omits most full-corpus distractors. No France or Portal score exists.
 - Do not start the stopped broad full-corpus scan or complete test TSV generation before the quality gate and phase review.
 - Total Modal spending ceiling: $5 until explicitly changed. The 2026-09-27 05:12 IST billing report showed approximately $1.164 posted across all stopped apps; current-hour billing can lag. No Modal app is running.
-- Account-wide Codex weekly usage was 33% at the last check. Preserve more than 40% remaining; stop new model-driven work at 60% used. Check before major continuation; do not intentionally overshoot a lagging meter.
+- Account-wide Codex weekly usage was 36% at the latest check. Preserve more than 40% remaining; stop new model-driven work at 60% used. Check before major continuation; do not intentionally overshoot a lagging meter.
 
 ## Completed quality work
 
@@ -17,6 +17,7 @@ Last updated: 2026-09-27 05:15 IST. This is a working checkpoint, not a submissi
 2. Simple context-threshold tuning, missing-address expert, extra training, deeper or alternate tree families, and target-neighbor address borrowing did not yield a material development gain. A 20% residual XGBoost blend gave a small development gain to 98.3888% overall.
 3. First fresh v1 10k batch (original training S1 rows 280001–290000): frozen baseline 98.4139% overall / 98.2916% India / 98.4970% US. Residual blend 98.4989% / 98.4338% / 98.5432%. The gain is 0.0851 percentage points overall, still about 1.001 points below goal. Same 503,552 candidates for both methods locally. Details: [pipeline_bottleneck_diagnosis.md](pipeline_bottleneck_diagnosis.md), `work/fresh_10k_v1/paired_score.json`.
 4. Script-aware Unidecode/RapidFuzz name feature specialist on old development data scored 98.3847% overall at its best exposed-development threshold versus 98.3658% baseline, and 98.1801% India. This is a tiny, selection-optimistic development signal; no fresh validation or promotion.
+5. Six-feature global core-name-frequency matcher trained on exposed v1 was frozen and pushed at `7cd44c0` before fresh-v2 scoring. On original S1 rows 290,001–300,000 it improved macro F0.5 from 98.3108% to **98.6193% overall**, from 98.1273% to **98.4423% India**, and from 98.4332% to **98.7374% US**. Paired overall bootstrap gain +0.3085 points (95% interval +0.1931 to +0.4280). The 500,128 candidates and blocking recall 99.7656% were unchanged; the model cut 173 FP at the cost of 159 extra FN. **Still 0.8807 points below 99.5%.** Fresh-v2 is exposed; reserve the final 10k for a frozen confirmation. Details: [core_frequency_fresh_validation.md](core_frequency_fresh_validation.md).
 
 ## Performance profiling, before any production optimization
 
@@ -52,6 +53,6 @@ The predeclared wider variant (`keep=16,max_rank=80`) completed on the same expo
 2. Retain the default SQLite connection settings. The completed full-index five-row benchmark found the larger-cache/mmap setting slower on the warm repeat and much heavier in memory; it is not a production optimization.
 3. The first five full-index test rows required about 10–12s/S1 in one process, a severe throughput warning. A broader but bounded full-index benchmark should follow only a candidate architecture change with progress and time limits; no TSV submission has started.
 4. Keep the validated FTS retrieval for now. A new batched design must preserve its true-link coverage before replacement, followed by fresh disjoint validation; neither screened configuration qualifies.
-5. Pursue new high-specificity evidence for empty target addresses and script mismatches. Reject simple threshold loosening, which added too many false positives. Choose any new method on development, then freeze before fresh v2. Reserve fresh final batch for confirmation, not iterative tuning.
+5. Pursue new high-specificity evidence for empty target addresses and script mismatches. Reject simple threshold loosening, which added too many false positives. Choose any new method on exposed data, then freeze before using the final disjoint 10k confirmation batch. The frozen core-frequency model is a useful quality improvement but falls short of the goal.
 
 Do not label an experiment a win merely because it reduces wall time; report candidate counts, blocking recall, final matching F0.5, memory, and scope together.

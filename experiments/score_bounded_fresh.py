@@ -20,17 +20,32 @@ def ids(value):
     return value.split(",") if value else []
 
 
-def summarize(items):
+def summarize(items, target_count):
     sizes = sorted(item["candidate_count"] for item in items)
     n = len(items)
+    candidate_pairs = sum(sizes)
+    candidate_tp = sum(item["candidate_tp"] for item in items)
+    candidate_fn = sum(item["candidate_fn"] for item in items)
+    candidate_fp = candidate_pairs - candidate_tp
+    comparison_space = n * target_count
+    candidate_tn = comparison_space - candidate_tp - candidate_fn - candidate_fp
     return {
         "groups": n,
         "macro_f0_5": statistics.mean(item["f05"] for item in items),
         "tp": sum(item["tp"] for item in items),
         "fp": sum(item["fp"] for item in items),
         "fn": sum(item["fn"] for item in items),
-        "candidate_tp": sum(item["candidate_tp"] for item in items),
-        "candidate_fn": sum(item["candidate_fn"] for item in items),
+        "candidate_comparison_space": comparison_space,
+        "candidate_pairs": candidate_pairs,
+        "candidate_tp": candidate_tp,
+        "candidate_fn": candidate_fn,
+        "candidate_fp": candidate_fp,
+        "candidate_tn": candidate_tn,
+        "candidate_recall": candidate_tp / (candidate_tp + candidate_fn),
+        "candidate_precision": candidate_tp / candidate_pairs,
+        "candidate_reduction_ratio": 1 - candidate_pairs / comparison_space,
+        "candidate_specificity": candidate_tn / (candidate_tn + candidate_fp),
+        "candidate_f1": 2 * candidate_tp / (2 * candidate_tp + candidate_fp + candidate_fn),
         "candidate_oracle_macro_f0_5": statistics.mean(item["candidate_oracle_f05"] for item in items),
         "candidate_mean": statistics.mean(sizes),
         "candidate_p95": sizes[(95 * n + 99) // 100 - 1],
@@ -88,9 +103,10 @@ def main():
     report = {"target_pool": scope, "batch_rows": len(source), "pipelines": {}}
     for name, data in output["results"].items():
         report["pipelines"][name] = {
-            "overall": summarize(data),
+            "overall": summarize(data, scope["target_count"]),
             "countries": {
-                country: summarize([item for item in data if item["country"] == country])
+                country: summarize([item for item in data if item["country"] == country],
+                                   scope["target_count"])
                 for country in ("India", "US")
             },
         }

@@ -4,6 +4,7 @@ import argparse
 import csv
 import json
 import pathlib
+import time
 
 import numpy as np
 from xgboost import XGBClassifier
@@ -12,6 +13,7 @@ from core_frequency_features import FEATURE_NAMES, digest, load
 
 
 def main() -> None:
+    started = time.monotonic()
     p = argparse.ArgumentParser()
     p.add_argument("--source1", type=pathlib.Path, required=True)
     p.add_argument("--pair-scores", type=pathlib.Path, required=True)
@@ -56,6 +58,7 @@ def main() -> None:
         "pair_scores_sha256": digest(args.pair_scores),
         "core_cache_manifest_sha256": digest(args.core_cache / "manifest.json"),
         "scope": "label-blind prediction; no quality score here",
+        "seconds": time.monotonic() - started,
     }
     (args.out_dir / "manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))

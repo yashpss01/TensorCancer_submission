@@ -1,0 +1,247 @@
+{
+  "scope": "three exposed reduced-pool 10k cohorts; development screen only",
+  "rule": "each accepted target assigned to highest rich probability S1; tie by S1 ID",
+  "training_ownership": {
+    "ground_truth_sha256": "70bc1d8a16c667e0155c2105d0ab2ebe41d7e7a85d8a529e3ca81c6c3a5af037",
+    "source1_rows": 2206821,
+    "true_links": 7638365,
+    "distinct_target_ids": 7638365,
+    "targets_with_multiple_s1_owners": 0
+  },
+  "directions": {
+    "v1_to_v2": {
+      "candidate_pairs": 500128,
+      "threshold": 0.7,
+      "true_candidate_targets_with_multiple_s1_owners": 0,
+      "predicted_target_conflicts": 9,
+      "removed_predictions": 9,
+      "removed_true": 3,
+      "removed_false": 6,
+      "baseline": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9875635291279954,
+          "tp": 33770,
+          "fp": 185,
+          "fn": 790
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9847237645925588,
+          "tp": 13531,
+          "fp": 93,
+          "fn": 398
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.9894574944399276,
+          "tp": 20239,
+          "fp": 92,
+          "fn": 392
+        }
+      },
+      "resolved": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9876735998203665,
+          "tp": 33767,
+          "fp": 179,
+          "fn": 793
+        },
+        "India": {
+          "s1": 4001,
+          "macro_f05": 0.9849463063229748,
+          "tp": 13530,
+          "fp": 88,
+          "fn": 399
+        },
+        "US": {
+          "s1": 5999,
+          "macro_f05": 0.989492553193106,
+          "tp": 20237,
+          "fp": 91,
+          "fn": 394
+        }
+      },
+      "paired_gains": {
+        "overall": {
+          "gain_percentage_points": 0.011007069237120169,
+          "paired_entity_bootstrap_95_pp": [
+            0.000319368650119922,
+            0.02673222370442231
+          ]
+        },
+        "India": {
+          "gain_percentage_points": 0.022254173041603518,
+          "paired_entity_bootstrap_95_pp": [
+            -0.0008062500503906274,
+            0.055033027512530724
+          ]
+        },
+        "US": {
+          "gain_percentage_points": 0.0035058753178439776,
+          "paired_entity_bootstrap_95_pp": [
+            -0.0026459436361086653,
+            0.014288095634986783
+          ]
+        }
+      }
+    },
+    "v2_to_v1": {
+      "candidate_pairs": 503552,
+      "threshold": 0.825,
+      "true_candidate_targets_with_multiple_s1_owners": 0,
+      "predicted_target_conflicts": 8,
+      "removed_predictions": 8,
+      "removed_true": 0,
+      "removed_false": 8,
+      "baseline": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9879591016924197,
+          "tp": 33512,
+          "fp": 133,
+          "fn": 959
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.986374909520628,
+          "tp": 13481,
+          "fp": 57,
+          "fn": 481
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.9890351818494132,
+          "tp": 20031,
+          "fp": 76,
+          "fn": 478
+        }
+      },
+      "resolved": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9882442046012068,
+          "tp": 33512,
+          "fp": 125,
+          "fn": 959
+        },
+        "India": {
+          "s1": 4045,
+          "macro_f05": 0.9868580253898607,
+          "tp": 13481,
+          "fp": 52,
+          "fn": 481
+        },
+        "US": {
+          "s1": 5955,
+          "macro_f05": 0.9891857822519028,
+          "tp": 20031,
+          "fp": 73,
+          "fn": 478
+        }
+      },
+      "paired_gains": {
+        "overall": {
+          "gain_percentage_points": 0.028510290878711927,
+          "paired_entity_bootstrap_95_pp": [
+            0.00738095238095238,
+            0.05627472089314192
+          ]
+        },
+        "India": {
+          "gain_percentage_points": 0.04831158692325825,
+          "paired_entity_bootstrap_95_pp": [
+            0.007063393960798163,
+            0.1118821325704417
+          ]
+        },
+        "US": {
+          "gain_percentage_points": 0.015060040248957124,
+          "paired_entity_bootstrap_95_pp": [
+            0.0,
+            0.035744272520091006
+          ]
+        }
+      }
+    },
+    "v1+v2 frozen_to_final": {
+      "candidate_pairs": 508773,
+      "threshold": 0.775,
+      "true_candidate_targets_with_multiple_s1_owners": 0,
+      "predicted_target_conflicts": 14,
+      "removed_predictions": 14,
+      "removed_true": 0,
+      "removed_false": 14,
+      "baseline": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.987707101909527,
+          "tp": 33952,
+          "fp": 174,
+          "fn": 878
+        },
+        "India": {
+          "s1": 4087,
+          "macro_f05": 0.9855407868296433,
+          "tp": 13727,
+          "fp": 78,
+          "fn": 411
+        },
+        "US": {
+          "s1": 5913,
+          "macro_f05": 0.9892044348592114,
+          "tp": 20225,
+          "fp": 96,
+          "fn": 467
+        }
+      },
+      "resolved": {
+        "overall": {
+          "s1": 10000,
+          "macro_f05": 0.9879473776185339,
+          "tp": 33952,
+          "fp": 160,
+          "fn": 878
+        },
+        "India": {
+          "s1": 4087,
+          "macro_f05": 0.9857798243109248,
+          "tp": 13727,
+          "fp": 72,
+          "fn": 411
+        },
+        "US": {
+          "s1": 5913,
+          "macro_f05": 0.989445566417485,
+          "tp": 20225,
+          "fp": 88,
+          "fn": 467
+        }
+      },
+      "paired_gains": {
+        "overall": {
+          "gain_percentage_points": 0.024027570900696835,
+          "paired_entity_bootstrap_95_pp": [
+            0.008460497835497835,
+            0.04297640712246687
+          ]
+        },
+        "India": {
+          "gain_percentage_points": 0.02390374812816027,
+          "paired_entity_bootstrap_95_pp": [
+            0.003374872387637844,
+            0.05131275573378584
+          ]
+        },
+        "US": {
+          "gain_percentage_points": 0.02411315582735961,
+          "paired_entity_bootstrap_95_pp": [
+            0.004831968302287937,
+            0.05091073848932363
+          ]
+        }
+      }
+    }
+  }
+}

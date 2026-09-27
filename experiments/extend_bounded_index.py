@@ -97,7 +97,7 @@ def main():
         "fresh_required_targets": len(required),
         "fresh_required_preexisting": len(required) - len(missing),
         "fresh_required_added": len(missing),
-        "target_policy": "old sealed 409141-target pool plus all fresh batch true targets",
+        "target_policy": f"existing {old_count}-target pool plus all fresh batch true targets",
         "scope": "reduced pool; may be optimistic vs full 10.32M-target corpus",
         "seconds": time.monotonic() - started,
     }

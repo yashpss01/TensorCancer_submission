@@ -1,0 +1,19 @@
+# Structural matcher screen after the 98.7707% confirmation
+
+The reserved confirmation batch is now exposed, so none of the experiments below is a new confirmation score. They are development screens on the previously exposed 10,000-S1 cohorts; any promoted method needs another disjoint frozen evaluation. The original candidate generator and its candidate lists were held fixed.
+
+The largest missed-link opportunity is cross-source consistency. In the third batch, 802 of the rich matcher's 878 missed true links had a correctly accepted true target from the *other* target source under the original frozen matcher. This motivated label-blind features comparing each candidate to accepted opposite-source targets within the same S1 group. Accepted targets were selected with the old frozen probability cutoff of 0.74, without truth labels.
+
+| Development method | Fit v1 → evaluate v2 overall / India F0.5 | Fit v2 → evaluate v1 overall / India F0.5 |
+| --- | ---: | ---: |
+| Rich matcher without anchor features | 98.7564% / 98.4724% | 98.7959% / 98.6375% |
+| Rich matcher + cross-source anchor similarities | **98.7767% / 98.5912%** | **98.8877% / 98.7485%** |
+| Above + frozen target-to-target pseudo-query scores | 98.7691% / 98.5775% | 98.9009% / 98.7825% |
+
+Cross-source anchor similarities consistently helped India by about 0.11–0.12 percentage points, but the overall gain was small and the score remained far below 99.5%. Scoring uncertain candidates as if an accepted opposite-source target were the query added no consistent benefit, so that extra scoring step is not justified. A deeper XGBoost model trained with mined hard negatives was also inconsistent: one configuration scored 98.6988% in the v1→v2 direction but 98.9223% in reverse; another scored 98.7292% / 98.8943%. These do not support a robust promotion.
+
+A per-S1 expected-F0.5 selection rule was calibrated on entity-disjoint crossfit predictions from the exposed v1+v2 batches. Its best development score was 98.7932%, **below** the fixed-cutoff score of 98.8034%. On the already exposed third batch it scored 98.7664% versus 98.7707% for the fixed cutoff. Keep the constant threshold.
+
+The candidate-to-anchor export takes about 13–14 seconds per 10,000 S1 on these reduced pools. Pseudo-query scores took about 22 seconds per 10,000 S1 for roughly 69,000 uncertain anchor/candidate comparisons. The latter cost does not buy a reliable F0.5 gain. These timings exclude candidate retrieval and rich feature extraction, and do not forecast full-corpus speed.
+
+The saved numeric screens are [cross-source anchors](cross_source_anchor_screen.json), [pseudo-query scores](pseudo_query_anchor_screen.json), [hard-negative variants](hard_negative_anchor_screen.json), and [group decision rule](group_f0_5_decision_screen.json). The development code is under `experiments/`; no variant in this report was inserted into the production inference path or represented as a Portal result.

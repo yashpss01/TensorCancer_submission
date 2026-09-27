@@ -37,7 +37,8 @@ def load_cohort(root):
     truth_count = np.array([len(s) for s in sets], dtype=np.int32)
     country = data["country"]
     expected = {"fresh_10k_v1": .9841388449392869,
-                "fresh_10k_v2": .9831077662024144}[root.name]
+                "fresh_10k_v2": .9831077662024144,
+                "fresh_10k_final": .9835376330949781}[root.name]
     baseline = metrics(data["frozen_probability"] >= .74, labels, group,
                        truth_count, country)
     if abs(baseline["overall"]["macro_f05"] - expected) > 1e-10:

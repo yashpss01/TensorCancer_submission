@@ -2,14 +2,14 @@
 
 **Team Name:** TensorCancer
 **Branch Owner:** Archisman
-**Status:** Frozen training-holdout result; test inference and Portal scoring pending
-**Date:** 26 September 2026
+**Status:** Research matcher improved but remains below target; test inference and Portal scoring pending
+**Date:** 27 September 2026
 
 ---
 
 ## 1. Executive Summary
 
-This branch records a text-only, multi-route candidate blocker followed by a blended XGBoost matcher. The best frozen configuration scored **98.4117% per-Source-1 macro F0.5** on 20,000 previously untouched labeled training entities in a reduced target pool. The requested 99.5% target was **not met**; there is no Portal score or measured France score.
+This branch records a text-only, multi-route candidate blocker followed by a blended XGBoost matcher. The packaged default matcher scored **98.4117% per-Source-1 macro F0.5** on a 20,000-entity reduced-pool holdout. A separately frozen rich research matcher later scored **98.7707%** on a disjoint 10,000-entity reduced-pool confirmation batch, improving the paired baseline of 98.3538%. This improved matcher is not yet the packaged submission inference. The requested 99.5% target was **not met**; there is no Portal score or measured France score.
 
 ## 2. Methodology
 
@@ -35,12 +35,15 @@ The pairwise and group-aware features are implemented under `code/business_entit
 | --- | ---: | ---: | ---: | ---: |
 | Development validation | 10,000 | 98.3658% | 98.1085% | 98.5386% |
 | Untouched holdout, S1 rows 60,001–80,000 | 20,000 | **98.4117%** | **98.3497%** | **98.4536%** |
+| Later frozen rich-matcher confirmation, S1 rows 300,001–310,000; different positive-enriched target pool | 10,000 | **98.7707%** | **98.5541%** | **98.9204%** |
 
 On holdout the matcher predicted 67,723 true links and 637 false links, and missed 1,607 true links. Of those misses, 159 were absent from the candidate list and 1,448 were retrieved but rejected by the matcher. Pair precision was 99.0682%; pair recall was 97.6821%. Most residual error is therefore in the matching decision, especially cases with missing addresses, cross-script names, and similar-looking but distinct businesses. See `reports/matching_round5_holdout_review.md` and `artifacts/matching_round5/holdout/results.json` for the full measured result and caveats.
 
+The newer rich-model confirmation used 477,164 targets and the **same 508,773 candidates** for baseline and changed matchers. Its final matching TP/FP/FN were 33,952/174/878; its candidate recall was 99.6957% overall and 99.5402% India. The paired macro-F0.5 gain was 0.4169 percentage points, with a 95% entity-bootstrap interval of +0.2939 to +0.5385 points. This was a reduced, positive-enriched training pool and cannot establish full-corpus, France, or Portal performance. See `reports/rich_pair_fresh_confirmation.md`.
+
 ## 6. Conclusion
 
-The 99.5% macro-F0.5 target remains unmet. The frozen model and holdout evidence are preserved for review. A hard-case reranker is the proposed next experiment, but it has not been trained or evaluated in this branch. A self-contained test inference entry point is included; full test inference, France accuracy, and the Portal score have not been measured.
+The 99.5% macro-F0.5 target remains unmet. The rich research matcher confirmed a gain but has not been inserted into the self-contained test inference command. Follow-on cross-source anchor evidence produced only a small development gain and needs another frozen disjoint confirmation before any quality claim. A self-contained inference entry point for the original matcher is included; full test inference, France accuracy, and the Portal score have not been measured.
 
 ## Appendix
 
@@ -51,6 +54,7 @@ The 99.5% macro-F0.5 target remains unmet. The frozen model and holdout evidence
 - `code/business_entity_resolution/round2/` through `round4/`: blocker improvements and independent validation rounds.
 - `code/business_entity_resolution/round5/`: pair features, matcher training, group features, and frozen holdout evaluation.
 - `artifacts/matching_round5/`: frozen model weights and compact evidence files. Raw challenge data, multi-gigabyte intermediate arrays, and the reduced SQLite index are not in Git.
+- `experiments/checkpoints/rich_pair_v1v2/` and `reports/rich_pair_fresh_confirmation.md`: separate, frozen research matcher and its disjoint reduced-pool confirmation. They are not dependencies of the packaged default inference command.
 - `reports/`: protocols, blocker evaluations, and the final matcher holdout review.
 
 ### B. Delivery Boundary
